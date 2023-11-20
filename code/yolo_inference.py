@@ -7,16 +7,20 @@ import pathlib
 import numpy as np
 from PIL import Image
 import pandas as pd
+import torch
+
+# Decide where to run
+torch.cuda.device_count()
 
 # Load a pretrained YOLO model
-model = YOLO('yolov8n.pt')
+model = YOLO('models/yolov8n.pt', device = "gpu")
 
 #files = os.listdir("images/")
 #files = [pathlib.Path("images/"+item) for item in files]
 
 
 # Perform object detection 
-vids = ["Auklab1_ROST6_2023-07-06_06.41.01.mp4", "Auklab1_ROST6_2023-07-06_08.53.17.mp4"]
+vids = ["Auklab1_ROST6_2023-07-06_08.53.17.mp4"]
 fps = 25
 
 for vid in vids: 
@@ -29,7 +33,7 @@ for vid in vids:
     starttime = pd.to_datetime(name[2]+" "+time[0]+":"+time[1]+":"+time[2])
     starttime_u = starttime.timestamp()
 
-    results = model(f'vids2/{vid}', stream = True)
+    results = model(f'vids/{vid}', stream = True)
 
     # Process results list
     time = []
@@ -49,11 +53,11 @@ for vid in vids:
         time.append([counter] * ndetect)
         framenum.append([counterx] * ndetect)
 
-        # Plot
+        # Plot image with boxes
         #im_array = r.plot()  # plot a BGR numpy array of predictions
         #im = Image.fromarray(im_array[..., ::-1])  # RGB PIL image
         #im.show()  # show image
-        
+
         counter += 1/fps
         counterx += 1
 
@@ -73,7 +77,7 @@ for vid in vids:
     out["ledge"] = ledge
     out["filename"] = vid
 
-    out.to_csv(f'{vid}.csv')
+    out.to_csv(f'inference/{vid}.csv')
 
 
 
