@@ -13,7 +13,7 @@ import torch
 torch.cuda.device_count()
 
 # Load a pretrained YOLO model
-model = YOLO('models/yolov8n.pt', device = "gpu")
+model = YOLO('models/yolov8n.pt')
 
 #files = os.listdir("images/")
 #files = [pathlib.Path("images/"+item) for item in files]
