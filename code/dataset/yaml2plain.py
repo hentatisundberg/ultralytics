@@ -12,14 +12,14 @@ import yaml
 
 # setting module path
 import config
-import boundig_box_mappings
+import bounding_box_mappings
 
 _seabird_types = astuple(config.SeabirdTypes())
 
 
 def parse_args():
     argparser = argparse.ArgumentParser(
-        description="A script to convert yaml labels to plain labels."
+        description="A script to convert yaml labels to plain labels"
     )
     argparser.add_argument(
         "src_root_path",
@@ -99,7 +99,7 @@ def yaml2plain(yaml_path: Path, types: tuple):
             x = np.array(bounding_boxes)
             plain_annotation = np.empty(x.shape)
             plain_annotation[:, 0] = x[:, 0]
-            plain_annotation[:, 1::] = boundig_box_mappings.xyxy2xywhn(
+            plain_annotation[:, 1::] = bounding_box_mappings.xyxy2xywhn(
                 x[:, 1::], width, height
             )
 
