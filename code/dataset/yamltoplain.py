@@ -13,8 +13,13 @@ def xyxy2xywhn(x: np.ndarray, width: int, height: int) -> np.ndarray:
     y[:, 3] = np.clip((x[:, 3] - x[:, 1]) / height, 0, 1)  # height
     return y
 
-labels_dir = './labels'
+#labels_dir = './labels'
+#labels_dir = "../../../../../mnt/BSP_NAS2_work/fish_model/annotations/train/"
+labels_dir = "../data/train"
+
+
 onces = True
+
 for train_val_dir in os.listdir(labels_dir):
     file_list = os.listdir(os.path.join(labels_dir, train_val_dir))
     plain_annotation = None

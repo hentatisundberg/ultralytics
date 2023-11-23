@@ -3,7 +3,7 @@
 
 # Install ClearML, following the steps here: 
 
-# Remeber to initialize in runcode
+# Remember to initialize in runcode
 
 # Prepare fish dataset, saving some key images for validation
 

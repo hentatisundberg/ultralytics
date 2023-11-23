@@ -1,0 +1,5 @@
+train: ../../../../../../mnt/BSP_NAS2_work/fish_model/annotations/train/
+val: ../../../../../../mnt/BSP_NAS2_work/fish_model/annotations/validate/
+
+nc: 1
+names: ['fish']
