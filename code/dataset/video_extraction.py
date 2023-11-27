@@ -2,7 +2,7 @@ import os
 from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 import pandas as pd
 import sys
-
+import numpy as np
 
 
 video_meta = pd.read_csv("../data/fishvids.csv")
@@ -28,28 +28,37 @@ video_meta = pd.read_csv("../data/fishvids.csv")
 #]
 
 nas_video_path = "../../../../../../mnt/BSP_NAS1/Video/Video2023/TRI3/2023-07-03/"
+ext_video_path = "../../../../../../../../Volumes/JHS-SSD2/2023-07-03"
 
-output_folder = '../vids'
+#print(os.listdir(testdir))
+#sys.exit()
 
-if not os.path.isdir(output_folder):
-    os.mkdir(output_folder)
+output_folder = '../vids/'
+
+#if not os.path.isdir(output_folder):
+#    os.mkdir(output_folder)
 
 
-for metadata in video_meta.iloc[0]:
-#    _, ledge_name, video_date, start_hour = metadata[0].split('_')
-#    year = video_date.split('-')[0]
-#    start_hour = int(start_hour[:2])
-    clip_start_hour, clip_start_min, clip_start_sec = metadata[1].split(':')
-    clip_start_hour, clip_start_min, clip_start_sec = int(clip_start_hour), int(clip_start_min), int(clip_start_sec)
-    clip_end_hour, clip_end_min, clip_end_sec = metadata[2].split(':')
-    clip_end_hour, clip_end_min, clip_end_sec = int(clip_end_hour), int(clip_end_min), int(clip_end_sec)
+viddat = video_meta.iloc[0]
 
-    start_time = ((clip_start_hour - start_hour) * 60 + clip_start_min) * 60 + clip_start_sec
-    end_time = ((clip_end_hour - start_hour) * 60 + clip_end_min) * 60 + clip_end_sec
+non, ledge_name, video_date, start_hour = viddat[0].split('_')
+year = video_date.split('-')[0]
+start_hour = int(start_hour[:2])
 
-    ffmpeg_extract_subclip(
-        os.path.join(nas_video_path, 'Video'+year, ledge_name, video_date, metadata[0]),
-        start_time,
-        end_time,
-        targetname = os.path.join(output_folder, '_'.join([_, ledge_name, video_date, str(start_time), str(end_time)]) + '.mp4')
-    )
+startclip = pd.to_datetime(video_date+" "+viddat[1])
+endclip = pd.to_datetime(video_date+" "+viddat[2])
+startvid = startclip.floor("H")
+
+startsec = (startclip-startvid)/np.timedelta64(1,'s')
+endsec = (endclip-startvid)/np.timedelta64(1,'s')
+
+filename_out = output_folder+viddat[0][:-4]+"_"+str(int(startsec))+"_"+str(int(endsec))+".mp4"
+#filename_out = viddat[0][:-4]+"_"+str(int(startsec))+"_"+str(int(endsec))+".mp4"
+
+ffmpeg_extract_subclip(
+#    os.path.join(nas_video_path, 'Video'+year, ledge_name, video_date, metadata[0]),
+    os.path.join(ext_video_path, viddat[0]),
+    startsec,
+    endsec,
+    targetname = filename_out
+)
