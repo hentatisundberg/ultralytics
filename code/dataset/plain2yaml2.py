@@ -16,12 +16,12 @@ import bounding_box_mappings
 
 
 
-sourcefold = sys.argv[0]
-savefold = sys.argv[1]
+sourcefold = sys.argv[1]
+savefold = sys.argv[2]
 
 
 w, h = 0, 0
-filename = Path("dataset/txt/Auklab1_TRI3_2023-07-03_03.00.00_1795_1815_307.txt")
+filename = Path(sourcefold+"Auklab1_TRI3_2023-07-03_03.00.00_1795_1815_499.txt")
 pred = np.loadtxt(filename)
 if pred.ndim == 1:
     pred = np.expand_dims(pred, axis=0)
@@ -50,9 +50,10 @@ if pred.shape[0] > 0:
             }
         )
 
-#file = open(dst_path.joinpath(plain_path.stem + ".yaml"), "w")
-#print(file)
-#yaml.dump(data_dict, file, allow_unicode=True)#
+file = open(savefold+filename.stem + ".yaml")
+print(file)
+yaml.dump(data_dict, file, allow_unicode=True)
+
 
 
 
