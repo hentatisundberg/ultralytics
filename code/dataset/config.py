@@ -11,7 +11,7 @@ class SeabirdTypes:
 
 @dataclass(frozen=True)
 class Fish:
-    ADULT: str = "fish"
+    FISH: str = "fish"
 
 @dataclass(frozen=True)
 class YolovDataDirs:

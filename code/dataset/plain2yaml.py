@@ -12,7 +12,7 @@ import yaml
 
 # setting module path
 import config
-import boundig_box_mappings
+import bounding_box_mappings
 
 _seabird_types = astuple(config.SeabirdTypes())
 
