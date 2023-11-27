@@ -39,26 +39,28 @@ output_folder = '../vids/'
 #    os.mkdir(output_folder)
 
 
-viddat = video_meta.iloc[0]
+for ind in video_meta.index:
 
-non, ledge_name, video_date, start_hour = viddat[0].split('_')
-year = video_date.split('-')[0]
-start_hour = int(start_hour[:2])
+    viddat = video_meta.iloc[ind]
 
-startclip = pd.to_datetime(video_date+" "+viddat[1])
-endclip = pd.to_datetime(video_date+" "+viddat[2])
-startvid = startclip.floor("H")
+    non, ledge_name, video_date, start_hour = viddat[0].split('_')
+    year = video_date.split('-')[0]
+    start_hour = int(start_hour[:2])
 
-startsec = (startclip-startvid)/np.timedelta64(1,'s')
-endsec = (endclip-startvid)/np.timedelta64(1,'s')
+    startclip = pd.to_datetime(video_date+" "+viddat[1])
+    endclip = pd.to_datetime(video_date+" "+viddat[2])
+    startvid = startclip.floor("H")
 
-filename_out = output_folder+viddat[0][:-4]+"_"+str(int(startsec))+"_"+str(int(endsec))+".mp4"
-#filename_out = viddat[0][:-4]+"_"+str(int(startsec))+"_"+str(int(endsec))+".mp4"
+    startsec = (startclip-startvid)/np.timedelta64(1,'s')
+    endsec = (endclip-startvid)/np.timedelta64(1,'s')
 
-ffmpeg_extract_subclip(
-#    os.path.join(nas_video_path, 'Video'+year, ledge_name, video_date, metadata[0]),
-    os.path.join(ext_video_path, viddat[0]),
-    startsec,
-    endsec,
-    targetname = filename_out
-)
+    filename_out = output_folder+viddat[0][:-4]+"_"+str(int(startsec))+"_"+str(int(endsec))+".mp4"
+    #filename_out = viddat[0][:-4]+"_"+str(int(startsec))+"_"+str(int(endsec))+".mp4"
+
+    ffmpeg_extract_subclip(
+    #    os.path.join(nas_video_path, 'Video'+year, ledge_name, video_date, metadata[0]),
+        os.path.join(ext_video_path, viddat[0]),
+        startsec,
+        endsec,
+        targetname = filename_out
+    )
