@@ -8,13 +8,13 @@ from autodistill.detection import CaptionOntology
 # then, load the model
 
 # replace weights_path with the path to your YOLOv8 weights file
-base_model = YOLOv8Base(ontology=CaptionOntology({"fish": "fish"}), weights_path="../models/best.pt")
+base_model = YOLOv8Base(ontology=CaptionOntology({"fish": "fish"}), weights_path="models/best.pt")
 
 # run inference on a single image
 #results = base_model.predict("../images/bus.jpg")
 
 # Predict for a whole data set
 base_model.label(
-  input_folder="../images",
-  output_folder="../dataset"
+  input_folder="images",
+  output_folder="data"
 )

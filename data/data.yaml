@@ -1,6 +1,5 @@
-train: ../../../../../../mnt/BSP_NAS2_work/fish_model/annotations/train/
-val: ../../../../../../mnt/BSP_NAS2_work/fish_model/annotations/validate/
-test: ../../../../../../mnt/BSP_NAS2_work/fish_model/annotations/test/
-
+names:
+- fish
 nc: 1
-names: ['fish']
+train: /Users/jonas/Documents/Programming/python/ultralytics/data/train/images
+val: /Users/jonas/Documents/Programming/python/ultralytics/data/valid/images
