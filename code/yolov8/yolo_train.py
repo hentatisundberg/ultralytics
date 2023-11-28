@@ -7,6 +7,6 @@ model = YOLO('../models/yolov8m.pt')  # load a pretrained model (recommended for
 #model = YOLO('yolov8n.yaml').load('yolov8n.pt')  # build from YAML and transfer weights
 
 # Train the model
-results = model.train(data='../data/data.yaml', epochs=50, imgsz=1280)
+results = model.train(data='../data/data.yaml', epochs=50, imgsz=1280, device = [0, 1])
 
 
