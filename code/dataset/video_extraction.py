@@ -13,6 +13,9 @@ video_meta_path = sys.argv[1]
 datfold = sys.argv[2]
 vid_outfold = sys.argv[3]
 im_outfold = sys.argv[4]
+annot_outfold = sys.argv[5]
+model = sys.argv[6]
+
 
 # Read metadata on interesting videos
 video_meta = pd.read_csv(video_meta_path)
@@ -77,16 +80,17 @@ for file in os.listdir(vid_outfold)[1:]:
     save_all_frames()
 
 # Annotate
-base_model = YOLOv8Base(ontology=CaptionOntology({"fish": "fish"}), weights_path="../models/best.pt")
+base_model = YOLOv8Base(ontology=CaptionOntology({"fish": "fish"}), weights_path=model)
 
 base_model.label(
   input_folder=im_outfold,
-  output_folder="../data"
+  output_folder=annot_outfold
 )
 
 
 # RUN example (MAC)
-#python3 -i dataset/video_extraction.py "../data/fishvids.csv" "../../../../../../../../Volumes/JHS-SSD2/2023-07-03" "../vids/" "../images/"
+#python3 -i dataset/video_extraction.py "../data/fishvids.csv" "../../../../../../../../Volumes/JHS-SSD2/2023-07-03" "../vids/" "../images/" "../data/" "../models/best.pt"
 
 # Run example (Sprattus)
+#python3 -i dataset/video_extraction.py "../data/fishvids.csv" "../../../../../../../../Volumes/JHS-SSD2/2023-07-03" "../vids/" "../images/" "../data/" "../models/best.pt"
 
