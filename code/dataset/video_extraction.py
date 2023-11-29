@@ -14,7 +14,7 @@ datfold = sys.argv[2]
 vid_outfold = sys.argv[3]
 im_outfold = sys.argv[4]
 
-
+# Read metadata on interesting videos
 video_meta = pd.read_csv(video_meta_path)
 
 def cut_vid(): 
@@ -85,6 +85,8 @@ base_model.label(
 )
 
 
-
+# RUN example (MAC)
 #python3 -i dataset/video_extraction.py "../data/fishvids.csv" "../../../../../../../../Volumes/JHS-SSD2/2023-07-03" "../vids/" "../images/"
+
+# Run example (Sprattus)
 
