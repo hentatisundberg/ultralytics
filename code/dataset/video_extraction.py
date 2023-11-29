@@ -125,7 +125,7 @@ def write_yaml_to_file(py_obj,filename):
 results = cut_vid() 
 
 # Extract frames from all vids 
-for file in os.listdir(vid_outfold)[1:]:
+for file in os.listdir(vid_outfold):
     save_all_frames()
 
 # Annotate
@@ -140,11 +140,9 @@ results = create_yaml()
 
 
 
-
-
 # RUN example (MAC)
 #python3 -i dataset/video_extraction.py "../data/fishvids.csv" "../../../../../../../../Volumes/JHS-SSD2/2023-07-03" "../vids/" "../images/" "../data/" "../data/annotations/yaml/" "../models/best.pt"
 
 # Run example (Sprattus)
-#python3 dataset/video_extraction.py "../data/fishvids.csv" "../../../../../../../../mnt/BSP_NAS1/Video/" "../vids/" "../images/" "../data/" "../data/annotations/yaml/", "runs/train12/best.pt"
+#python3 dataset/video_extraction.py "../data/fishvids.csv" "../../../../../../../../mnt/BSP_NAS1/Video/" "../vids/" "../images/" "../data/" "../data/annotations/yaml/" "runs/detect/train12/weights/best.pt"
 
