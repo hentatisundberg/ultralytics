@@ -1,11 +1,13 @@
 
 # Prepare fish dataset, saving some key images for validation
 
-# Create relevant video clips (scan videos)
-# Save either all, or some selection of those images, into a folder 
-# Use Autodistill to autolabel those images
-# Convert labels to yaml 
-# Read into LabelImageLab
+# Identify relevant video clips (scan videos)
+
+# Automated procedure: 
+Cut videos (video_extraction.py)
+Save images (save_imageframes.py)
+Annotate (yolo_autodistill_label)
+
 # Add to training dataset
 
 
