@@ -12,7 +12,7 @@ from pathlib import Path
 
 # Read arguments
 video_meta_path = sys.argv[1]
-datfold = sys.argv[2]
+vid_sourcefold = sys.argv[2]
 vid_outfold = sys.argv[3]
 im_outfold = sys.argv[4]
 annot_outfold = sys.argv[5]
@@ -22,6 +22,7 @@ model = sys.argv[7]
 
 # Read metadata on interesting videos
 video_meta = pd.read_csv(video_meta_path)
+
 
 def cut_vid(): 
 
@@ -42,12 +43,11 @@ def cut_vid():
             startsec = (startclip-startvid)/np.timedelta64(1,'s')
             endsec = (endclip-startvid)/np.timedelta64(1,'s')
 
+            vid_rel_path = os.path.join(vid_sourcefold, 'Video'+year, ledge_name, video_date)
             filename_out = vid_outfold+viddat[0][:-4]+"_"+str(int(startsec))+"_"+str(int(endsec))+".mp4"
-            #filename_out = viddat[0][:-4]+"_"+str(int(startsec))+"_"+str(int(endsec))+".mp4"
 
             ffmpeg_extract_subclip(
-            #    os.path.join(nas_video_path, 'Video'+year, ledge_name, video_date, metadata[0]),
-                os.path.join(datfold, viddat[0]),
+                os.path.join(vid_rel_path, viddat[0]),
                 startsec,
                 endsec,
                 targetname = filename_out
@@ -122,18 +122,18 @@ def write_yaml_to_file(py_obj,filename):
 ## RUN
 
 # Run video cutting
-#results = cut_vid() 
+results = cut_vid() 
 
 # Extract frames from all vids 
-#for file in os.listdir(vid_outfold)[1:]:
-#    save_all_frames()
+for file in os.listdir(vid_outfold)[1:]:
+    save_all_frames()
 
 # Annotate
-#base_model = YOLOv8Base(ontology=CaptionOntology({"fish": "fish"}), weights_path=model)
+base_model = YOLOv8Base(ontology=CaptionOntology({"fish": "fish"}), weights_path=model)
 
-#base_model.label(
-#  input_folder=im_outfold,
-#  output_folder=annot_outfold)
+base_model.label(
+  input_folder=im_outfold,
+  output_folder=annot_outfold)
 
 # Convert to yaml
 results = create_yaml()
@@ -146,5 +146,5 @@ results = create_yaml()
 #python3 -i dataset/video_extraction.py "../data/fishvids.csv" "../../../../../../../../Volumes/JHS-SSD2/2023-07-03" "../vids/" "../images/" "../data/" "../data/annotations/yaml/" "../models/best.pt"
 
 # Run example (Sprattus)
-#python3 -i dataset/video_extraction.py "../data/fishvids.csv" "../../../../../../../../Volumes/JHS-SSD2/2023-07-03" "../vids/" "../images/" "../data/" "../data/annotations/yaml/", "../models/best.pt"
+#python3 dataset/video_extraction.py "../data/fishvids.csv" "../../../../../../../../mnt/BSP_NAS1/Video/" "../vids/" "../images/" "../data/" "../data/annotations/yaml/", "runs/train12/best.pt"
 
