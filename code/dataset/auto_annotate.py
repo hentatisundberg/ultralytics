@@ -73,8 +73,8 @@ def save_all_frames(ext='jpg'):
 
 def create_yaml():
     
-    files = list(Path(annot_outfold+"/valid/labels").glob('**/*'))
-    files = files + list(Path(annot_outfold+"/train/labels").glob('**/*'))
+    files = list(Path(annot_outfold).glob('**/*'))
+    #files = files + list(Path(annot_outfold+"/train/labels").glob('**/*'))
 
     for filename in files: 
 
@@ -122,18 +122,15 @@ def write_yaml_to_file(py_obj,filename):
 ## RUN
 
 # Run video cutting
-results = cut_vid() 
+#results = cut_vid() 
 
 # Extract frames from all vids 
-for file in os.listdir(vid_outfold):
-    save_all_frames()
+#for file in os.listdir(vid_outfold):
+#    save_all_frames()
 
 # Annotate
-base_model = YOLOv8Base(ontology=CaptionOntology({"fish": "fish"}), weights_path=model)
-
-base_model.label(
-  input_folder=im_outfold,
-  output_folder=annot_outfold)
+#base_model = YOLOv8Base(ontology=CaptionOntology({"fish": "fish"}), weights_path=model)
+#base_model.label(input_folder=im_outfold,output_folder=annot_outfold)
 
 # Convert to yaml
 results = create_yaml()
@@ -144,5 +141,5 @@ results = create_yaml()
 #python3 -i dataset/video_extraction.py "../data/fishvids.csv" "../../../../../../../../Volumes/JHS-SSD2/2023-07-03" "../vids/" "../images/" "../data/" "../data/annotations/yaml/" "../models/best.pt"
 
 # Run example (Sprattus)
-#python3 dataset/video_extraction.py "../data/fishvids.csv" "../../../../../../../../mnt/BSP_NAS1/Video/" "../vids/" "../images/" "../data/" "../data/annotations/yaml/" "runs/detect/train12/weights/best.pt"
+#python3 dataset/auto_annotate.py "../data/fishvids.csv" "../../../../../../../../mnt/BSP_NAS1/Video/" "../vids/" "../images/" "../data/annotations/" "../data/annotations_yaml/" "runs/detect/train12/weights/best.pt"
 
