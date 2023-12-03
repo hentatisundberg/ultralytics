@@ -4,7 +4,7 @@ import numpy as np
 dir = "../../../../../../mnt/BSP_NAS2_work/fish_model/annotations/"
 allfiles = os.listdir(dir+"train/images/")
 tot = len(allfiles)
-split = [.8, .1, .1]
+split = [.8, .1, 0]
 nval, ntest = round(split[1]*tot,0), round(split[2]*tot,0)
 ntrain = tot - (nval+ntest)
 rand = [list(np.repeat(0, ntrain)), list(np.repeat(1, nval)), list(np.repeat(2, nval))]
