@@ -108,6 +108,6 @@ results = split_dataset()
 
 
 #Run example
-#python3 dataset/prep_new_dataset.py "../../../../../Desktop/annot_fin2/" 
+#python3 dataset/prep_new_dataset.py "../../../../../Desktop/images/annot_finished/" 
 
 
