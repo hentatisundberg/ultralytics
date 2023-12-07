@@ -13,7 +13,7 @@ import torch
 torch.cuda.device_count()
 
 # Load a pretrained YOLO model
-model = YOLO('models/yolov8n.pt')
+model = YOLO('models/best_train41.pt')
 
 #files = os.listdir("images/")
 #files = [pathlib.Path("images/"+item) for item in files]
@@ -21,6 +21,9 @@ model = YOLO('models/yolov8n.pt')
 
 # Perform object detection 
 vids = ["Auklab1_ROST6_2023-07-06_08.53.17.mp4"]
+
+vids = os.listdir("vids/")
+
 fps = 25
 
 for vid in vids: 
@@ -78,6 +81,8 @@ for vid in vids:
     out["filename"] = vid
 
     out.to_csv(f'inference/{vid}.csv')
+
+
 
 
 
