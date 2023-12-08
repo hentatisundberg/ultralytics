@@ -4,8 +4,6 @@ import pandas as pd
 import sys
 import numpy as np
 import cv2
-from autodistill_yolov8 import YOLOv8Base
-from autodistill.detection import CaptionOntology
 import yaml
 from pathlib import Path
 
@@ -15,9 +13,8 @@ video_meta_path = sys.argv[1]
 vid_sourcefold = sys.argv[2]
 vid_outfold = sys.argv[3]
 im_outfold = sys.argv[4]
-annot_outfold = sys.argv[5]
-yaml_outfold = sys.argv[6]
-model = sys.argv[7]
+yaml_outfold = sys.argv[5]
+model = sys.argv[6]
 
 
 # Read metadata on interesting videos
@@ -71,76 +68,124 @@ def save_all_frames(ext='jpg'):
         else:
             return
 
-def create_yaml():
-    
-    files = list(Path(annot_outfold).glob('**/*'))
 
-    for filename in files: 
+def annotate_images():
 
-        pred = np.loadtxt(filename)
+    # Load a pretrained YOLO model
+    model = YOLO(model)
 
-        width = 2560
-        height = 1440
+    # List of videos for inference 
+    ims = os.listdir("../images")
 
-        # Always in file
-        data_dict = {}
-        data_dict["image"] = filename.name
-        data_dict["size"] = {"depth": 3, "height": height, "width": width}
-        data_dict["source"] = {"framenumber": 0, "path": "na", "video": "na"}
-        data_dict["state"] = {"verified": False, "warnings": 0}
+    # Run
+    for im in ims: 
 
-        if len(pred) > 0:
-            data_dict["objects"] = []
+        if len(im) > 20:
 
-            for ind in range(0, pred.ndim):
-                if pred.ndim == 1: 
-                    tdat = pred
-                else:
-                    tdat = pred[ind]
-                data_dict["objects"].append(
-                    {
-                        "bndbox": {
-                            "xmax": int(np.clip((tdat[1] + tdat[3] * 0.5) * width, 0, width - 1)),
-                            "xmin": int(np.clip((tdat[1] - tdat[3] * 0.5) * width, 0, width - 1)),
-                            "ymax": int(np.clip((tdat[2] + tdat[4] * 0.5) * height, 0, height - 1)),
-                            "ymin": int(np.clip((tdat[2] - tdat[4] * 0.5) * height, 0, height - 1)),
-                        },
-                        "name": "fish",
+            results = model(f'{im_outfold}/{im}')
 
-                    }
-                )
+            # Width and height
+            imread = cv2.imread(f'{im_outfold}/{im}')
+            width = imread.shape[1]
+            height = imread.shape[0]
 
-        write_yaml_to_file(data_dict, filename.stem)
+            # Process results list
+            boxes = []
+            boxesxyxy = []
+
+            for r in results:
+                boxes.append(r.boxes.xywh.tolist()) 
+                boxesxyxy.append(r.boxes.xyxy.tolist())
+
+            # Concatenate outputs
+            boxesx = sum(boxes, [])
+            boxesxyxy2 = sum(boxesxyxy, [])
+
+            # Save as data frames
+            nobj = len(boxesx)
+
+            filename = im.replace(".jpg", ".txt")
+            filename_simpl = im.replace(".jpg", "")
 
 
-def write_yaml_to_file(py_obj,filename):
-    with open(f'{yaml_outfold}{filename}.yaml', 'w',) as f :
+            # .yaml
+            # Always in file
+            data_dict = {}
+            data_dict["image"] = filename
+            data_dict["size"] = {"depth": 3, "height": height, "width": width}
+            data_dict["source"] = {"framenumber": 0, "path": "na", "video": "na"}
+            data_dict["state"] = {"verified": False, "warnings": 0}
+
+
+            if nobj > 0:
+
+                data_dict["objects"] = []
+
+                for row in range(0, nobj):
+                    tdat = boxesxyxy2[row]
+                    
+                    data_dict["objects"].append(
+                        {
+                            "bndbox": {
+                                "xmax": tdat[2],
+                                "xmin": tdat[0],
+                                "ymax": tdat[3],
+                                "ymin": tdat[1],
+                            },
+                            "name": "fish",
+
+                        }
+                    )
+            
+            write_yaml_to_file(data_dict, filename_simpl)
+
+
+            # Plain annotation
+            #if nobj > 0:
+
+                #y = np.empty([nobj, 5], dtype = float)
+                #for row in range(0, nobj):
+                #    y[row, 1] = (boxesx[row][0]+(.5*boxesx[row][2]))/width # x 
+                #    y[row, 2] = (boxesx[row][1]+(.5*boxesx[row][3]))/height # y 
+                #    y[row, 3] = (boxesx[row][2])/width # w 
+                #    y[row, 4] = (boxesx[row][3])/height # h 
+                
+                #np.savetxt(f'../dataset/annotations/{filename}', y, fmt="%i %1.4f %1.4f %1.4f %1.4f")
+            
+            #else:
+             #   open(f'../dataset/annotations/{filename}', 'a').close()
+
+
+
+def write_yaml_to_file(py_obj,filename_simpl):
+    with open(f'{yaml_outfold}{filename_simpl}.yaml', 'w',) as f :
         yaml.dump(py_obj,f,sort_keys=False) 
 
 
 ## RUN
 
 # Run video cutting
-#results = cut_vid() 
+##results = cut_vid() 
 
 # Extract frames from all vids 
 #for file in os.listdir(vid_outfold):
 #    save_all_frames()
 
-# Annotate
-base_model = YOLOv8Base(ontology=CaptionOntology({"fish": "fish"}), weights_path=model)
-base_model.label(input_folder=im_outfold,output_folder=annot_outfold)
 
 # Convert to yaml
-results = create_yaml()
+#results = create_yaml()
+
+results = annotate_images()
 
 
 
-# RUN example (MAC)
-#python3 -i dataset/video_extraction.py "../data/fishvids.csv" "../../../../../../../../Volumes/JHS-SSD2/2023-07-03" "../vids/" "../images/" "../data/" "../data/annotations/yaml/" "../models/best.pt"
+
+
+# RUN example (JHS MAC)
+#python3 dataset/auto_annotate.py "../data/fishvids.csv" "../vids/" "../vids/" "../images/" "../dataset/annotations/" "../dataset/annotations_yaml/" "../models/best.pt"
 
 # Run example (Sprattus)
-#python3 dataset/auto_annotate.py "../data/fishvids.csv" "../../../../../../../../mnt/BSP_NAS2/Video/" "../vids/" "../images/" "../data/annotations/" "../data/annotations_yaml/" "runs/detect/train48/weights/best.pt"
+#python3 dataset/auto_annotate.py "../data/fishvids.csv" "../../../../../../../../mnt/BSP_NAS2/Video/" "../vids/" "../images/" "../data/annotations_yaml/" "runs/detect/train48/weights/best.pt"
 
 # Run example (Larus)
 #python3 dataset/auto_annotate.py "../data/fishvids.csv" "../../../../../mnt/BSP_NAS2/BSP_data/Video/" "../vids/" "../images/" "../data/annotations/train/labels" "../data/annotations_yaml/" "../models/best_train41.pt"
