@@ -6,6 +6,8 @@ import numpy as np
 import cv2
 import yaml
 from pathlib import Path
+from ultralytics import YOLO
+
 
 
 # Read arguments
@@ -14,7 +16,7 @@ vid_sourcefold = sys.argv[2]
 vid_outfold = sys.argv[3]
 im_outfold = sys.argv[4]
 yaml_outfold = sys.argv[5]
-model = sys.argv[6]
+yolo_model = sys.argv[6]
 
 
 # Read metadata on interesting videos
@@ -72,10 +74,10 @@ def save_all_frames(ext='jpg'):
 def annotate_images():
 
     # Load a pretrained YOLO model
-    model = YOLO(model)
+    model = YOLO(yolo_model)
 
     # List of videos for inference 
-    ims = os.listdir("../images")
+    ims = os.listdir(im_outfold)
 
     # Run
     for im in ims: 
