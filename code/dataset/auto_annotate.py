@@ -74,7 +74,6 @@ def save_all_frames(ext='jpg'):
 def create_yaml():
     
     files = list(Path(annot_outfold).glob('**/*'))
-    #files = files + list(Path(annot_outfold+"/train/labels").glob('**/*'))
 
     for filename in files: 
 
@@ -130,7 +129,7 @@ for file in os.listdir(vid_outfold):
 
 # Annotate
 base_model = YOLOv8Base(ontology=CaptionOntology({"fish": "fish"}), weights_path=model)
-base_model.label(input_folder=im_outfold,output_folder=annot_outfold)
+base_model.label(input_folder=im_outfold,output_folder=annot_outfold, device = 0)
 
 # Convert to yaml
 results = create_yaml()
@@ -141,7 +140,7 @@ results = create_yaml()
 #python3 -i dataset/video_extraction.py "../data/fishvids.csv" "../../../../../../../../Volumes/JHS-SSD2/2023-07-03" "../vids/" "../images/" "../data/" "../data/annotations/yaml/" "../models/best.pt"
 
 # Run example (Sprattus)
-#python3 dataset/auto_annotate.py "../data/fishvids.csv" "../../../../../../../../mnt/BSP_NAS1/Video/" "../vids/" "../images/" "../data/annotations/" "../data/annotations_yaml/" "runs/detect/train12/weights/best.pt"
+#python3 dataset/auto_annotate.py "../data/fishvids.csv" "../../../../../../../../mnt/BSP_NAS2/Video/" "../vids/" "../images/" "../data/annotations/" "../data/annotations_yaml/" "runs/detect/train48/weights/best.pt"
 
 # Run example (Larus)
 #python3 dataset/auto_annotate.py "../data/fishvids.csv" "../../../../../mnt/BSP_NAS2/BSP_data/Video/" "../vids/" "../images/" "../data/annotations/" "../data/annotations_yaml/" "../models/best_train41.pt"
