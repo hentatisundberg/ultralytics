@@ -20,9 +20,10 @@ model = YOLO('models/best_train41.pt')
 
 
 # Perform object detection 
-vids = ["Auklab1_ROST6_2023-07-06_08.53.17.mp4"]
+vid_dir = "../../../../../mnt/BSP_NAS2/BSP_data/Video/Video2022/FAR3/2022-07-08/"
+vid_dir = "../../../../../mnt/BSP_NAS2/Video/Video2022/FAR3/2022-07-08/"
 
-vids = os.listdir("vids/")
+vids = os.listdir(vid_dir)
 
 fps = 25
 
@@ -36,7 +37,7 @@ for vid in vids:
     starttime = pd.to_datetime(name[2]+" "+time[0]+":"+time[1]+":"+time[2])
     starttime_u = starttime.timestamp()
 
-    results = model(f'vids/{vid}', stream = True)
+    results = model(f'{vid_dir}{vid}', stream = True)
 
     # Process results list
     time = []
