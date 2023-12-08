@@ -68,50 +68,6 @@ def save_all_frames(ext='jpg'):
         else:
             return
 
-<<<<<<< HEAD
-def create_yaml():
-    
-    files = list(Path(annot_outfold).glob('**/*'))
-
-    for filename in files: 
-
-        pred = np.loadtxt(filename)
-
-        width = 2560
-        height = 1440
-
-        # Always in file
-        data_dict = {}
-        data_dict["image"] = filename.name
-        data_dict["size"] = {"depth": 3, "height": height, "width": width}
-        data_dict["source"] = {"framenumber": 0, "path": "na", "video": "na"}
-        data_dict["state"] = {"verified": False, "warnings": 0}
-
-        if len(pred) > 0:
-            data_dict["objects"] = []
-
-            for ind in range(0, pred.ndim):
-                if pred.ndim == 1: 
-                    tdat = pred
-                else:
-                    tdat = pred[ind]
-                data_dict["objects"].append(
-                    {
-                        "bndbox": {
-                            "xmax": int(np.clip((tdat[1] + tdat[3] * 0.5) * width, 0, width - 1)),
-                            "xmin": int(np.clip((tdat[1] - tdat[3] * 0.5) * width, 0, width - 1)),
-                            "ymax": int(np.clip((tdat[2] + tdat[4] * 0.5) * height, 0, height - 1)),
-                            "ymin": int(np.clip((tdat[2] - tdat[4] * 0.5) * height, 0, height - 1)),
-                        },
-                        "name": "fish",
-
-                    }
-                )
-
-        write_yaml_to_file(data_dict, filename.stem)
-=======
->>>>>>> ca93012 (update auto annotate)
-
 
 def annotate_images():
 
@@ -215,15 +171,6 @@ def write_yaml_to_file(py_obj,filename_simpl):
 #for file in os.listdir(vid_outfold):
 #    save_all_frames()
 
-# Annotate
-<<<<<<< HEAD
-base_model = YOLOv8Base(ontology=CaptionOntology({"fish": "fish"}), weights_path=model)
-base_model.label(input_folder=im_outfold,output_folder=annot_outfold, device = 0)
-=======
-#base_model = YOLOv8Base(ontology=CaptionOntology({"fish": "fish"}), weights_path=model)
-#base_model.label(input_folder=im_outfold,output_folder=annot_outfold)
->>>>>>> ca93012 (update auto annotate)
-
 # Convert to yaml
 #results = create_yaml()
 
@@ -237,11 +184,7 @@ results = annotate_images()
 #python3 dataset/auto_annotate.py "../data/fishvids.csv" "../vids/" "../vids/" "../images/" "../dataset/annotations/" "../dataset/annotations_yaml/" "../models/best.pt"
 
 # Run example (Sprattus)
-<<<<<<< HEAD
-#python3 dataset/auto_annotate.py "../data/fishvids.csv" "../../../../../../../../mnt/BSP_NAS2/Video/" "../vids/" "../images/" "../data/annotations/" "../data/annotations_yaml/" "runs/detect/train48/weights/best.pt"
-=======
-#python3 dataset/auto_annotate.py "../data/fishvids.csv" "../../../../../../../../mnt/BSP_NAS1/Video/" "../vids/" "../images/" "../dataset/annotations_yaml/" "runs/detect/train12/weights/best.pt"
->>>>>>> ca93012 (update auto annotate)
+#python3 dataset/auto_annotate.py "../data/fishvids.csv" "../../../../../../../../mnt/BSP_NAS2/Video/" "../vids/" "../images/" "../data/annotations_yaml/" "runs/detect/train48/weights/best.pt"
 
 # Run example (Larus)
 #python3 dataset/auto_annotate.py "../data/fishvids.csv" "../../../../../mnt/BSP_NAS2/BSP_data/Video/" "../vids/" "../images/" "../data/annotations/" "../data/annotations_yaml/" "../models/best_train41.pt"
