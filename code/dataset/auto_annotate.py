@@ -121,15 +121,15 @@ def write_yaml_to_file(py_obj,filename):
 ## RUN
 
 # Run video cutting
-results = cut_vid() 
+#results = cut_vid() 
 
 # Extract frames from all vids 
-for file in os.listdir(vid_outfold):
-    save_all_frames()
+#for file in os.listdir(vid_outfold):
+#    save_all_frames()
 
 # Annotate
 base_model = YOLOv8Base(ontology=CaptionOntology({"fish": "fish"}), weights_path=model)
-base_model.label(input_folder=im_outfold,output_folder=annot_outfold, device = 0)
+base_model.label(input_folder=im_outfold,output_folder=annot_outfold)
 
 # Convert to yaml
 results = create_yaml()
@@ -143,5 +143,5 @@ results = create_yaml()
 #python3 dataset/auto_annotate.py "../data/fishvids.csv" "../../../../../../../../mnt/BSP_NAS2/Video/" "../vids/" "../images/" "../data/annotations/" "../data/annotations_yaml/" "runs/detect/train48/weights/best.pt"
 
 # Run example (Larus)
-#python3 dataset/auto_annotate.py "../data/fishvids.csv" "../../../../../mnt/BSP_NAS2/BSP_data/Video/" "../vids/" "../images/" "../data/annotations/" "../data/annotations_yaml/" "../models/best_train41.pt"
+#python3 dataset/auto_annotate.py "../data/fishvids.csv" "../../../../../mnt/BSP_NAS2/BSP_data/Video/" "../vids/" "../images/" "../data/annotations/train/labels" "../data/annotations_yaml/" "../models/best_train41.pt"
 
