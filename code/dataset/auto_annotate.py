@@ -143,3 +143,6 @@ results = create_yaml()
 # Run example (Sprattus)
 #python3 dataset/auto_annotate.py "../data/fishvids.csv" "../../../../../../../../mnt/BSP_NAS1/Video/" "../vids/" "../images/" "../data/annotations/" "../data/annotations_yaml/" "runs/detect/train12/weights/best.pt"
 
+# Run example (Larus)
+#python3 dataset/auto_annotate.py "../data/fishvids.csv" "../../../../../mnt/BSP_NAS2/BSP_data/Video/" "../vids/" "../images/" "../data/annotations/" "../data/annotations_yaml/" "../models/best_train41.pt"
+
