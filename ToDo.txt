@@ -1,14 +1,8 @@
 
-# Prepare fish dataset, saving some key images for validation
-
-# Identify relevant video clips (scan videos)
-
-# Automated procedure: 
-Cut videos (video_extraction.py)
-Save images (save_imageframes.py)
-Annotate (yolo_autodistill_label)
-
-# Add to training dataset
-
+# Complement fishvids.csv with new possibly interesting clips
+# Auto-annotate those
+# Add to dataset 
+# Train yolov8s & yolov8m models with same hyperparameters, compare performance
+  
 
 
