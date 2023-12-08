@@ -173,13 +173,7 @@ def write_yaml_to_file(py_obj,filename_simpl):
 #for file in os.listdir(vid_outfold):
 #    save_all_frames()
 
-
-# Convert to yaml
-#results = create_yaml()
-
 results = annotate_images()
-
-
 
 
 
