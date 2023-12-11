@@ -13,15 +13,14 @@ import torch
 torch.cuda.device_count()
 
 # Load a pretrained YOLO model
-model = YOLO('models/best_train41.pt')
+model = YOLO('models/best_train53.pt')
 
 #files = os.listdir("images/")
 #files = [pathlib.Path("images/"+item) for item in files]
 
 
 # Perform object detection 
-vid_dir = "../../../../../mnt/BSP_NAS2/BSP_data/Video/Video2022/FAR3/2022-07-08/"
-vid_dir = "../../../../../mnt/BSP_NAS2/Video/Video2022/FAR3/2022-07-08/"
+vid_dir = "../../../../../mnt/BSP_NAS2/Video/Video2022/ROST3/2022-07-01/"
 
 vids = os.listdir(vid_dir)
 
