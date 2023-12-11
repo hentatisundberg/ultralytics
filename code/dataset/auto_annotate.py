@@ -167,11 +167,11 @@ def write_yaml_to_file(py_obj,filename_simpl):
 ## RUN
 
 # Run video cutting
-##results = cut_vid() 
+results = cut_vid() 
 
 # Extract frames from all vids 
-#for file in os.listdir(vid_outfold):
-#    save_all_frames()
+for file in os.listdir(vid_outfold):
+    save_all_frames()
 
 results = annotate_images()
 
