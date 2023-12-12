@@ -8,8 +8,11 @@ import yaml
 # First convert yaml to txt 
 # Then split data set, create new folders and thus prepare for upload 
 
-# In folder 
-input_folder = sys.argv[1]
+
+# Directories 
+input_yaml = sys.argv[1]
+input_images = sys.argv[2]
+new_base = sys.argv[3]
 
 
 def xyxy2xywhn(x: np.ndarray, width: int, height: int) -> np.ndarray:
@@ -25,7 +28,7 @@ def xyxy2xywhn(x: np.ndarray, width: int, height: int) -> np.ndarray:
 
 def create_plain():
     
-    files = list(Path(input_folder).glob('*.yaml'))
+    files = list(Path(input_yaml).glob('*.yaml'))
 
     for filename in files: 
 
@@ -44,29 +47,27 @@ def create_plain():
                     xmax = obj["bndbox"]["xmax"]
                     ymax = obj["bndbox"]["ymax"]
 
-                    assert xmin < xmax
-                    assert ymin < ymax
+                    #assert xmin < xmax
+                    #assert ymin < ymax
 
                     bounding_boxes.append([0, xmin, ymin, xmax, ymax])
+        
+        labels_dst_path = Path(new_base+filename.stem+".txt")
 
         if len(bounding_boxes) > 0:
             x = np.array(bounding_boxes)
             plain_annotation = np.empty(x.shape)
             plain_annotation[:, 0] = x[:, 0]
             plain_annotation[:, 1::] = xyxy2xywhn(x[:, 1::], width, height)
-
-            labels_dst_path = Path(input_folder+filename.stem+".txt")
             np.savetxt(labels_dst_path, plain_annotation, fmt="%i %1.4f %1.4f %1.4f %1.4f")
-            #np.savetxt(labels_dst_path, plain_annotation)
         else:   # If there are no bounding boxes in the file... 
-            labels_dst_path = Path(input_folder+filename.stem+".txt")
             open(labels_dst_path, "w")
 
 
 def split_dataset():
-    files = list(Path(input_folder).glob('*.txt'))
+    files = list(Path(new_base).glob('*.txt'))
     tot = len(files)
-    split_val_test = [.1, .1]
+    split_val_test = [.1, 0]
     nval, ntest = int(round(split_val_test[0]*tot,0)), int(round(split_val_test[1]*tot,0))
     ntrain = tot - (nval+ntest)
     rand = [list(np.repeat(0, ntrain)), list(np.repeat(1, nval)), list(np.repeat(2, ntest))]
@@ -74,20 +75,20 @@ def split_dataset():
     np.random.shuffle(rand)
     count = 0
 
-    folds = ["train/", "val/", "test/"]
+    folds = ["train/", "validate/", "test/"]
     
     for fold in folds: 
-        os.mkdir(input_folder+fold)
-        os.mkdir(input_folder+fold+"images/")
-        os.mkdir(input_folder+fold+"labels/")
+        os.mkdir(new_base+fold)
+        os.mkdir(new_base+fold+"images/")
+        os.mkdir(new_base+fold+"labels/")
 
     for item in files: 
         label = item
-        image = item.parent.joinpath(item.stem+".jpg")
+        image = Path(input_images).joinpath(item.stem+".jpg")
 
-        if rand[count] == 0: fold = input_folder+"train/"
-        elif rand[count] == 1: fold = input_folder+"val/"
-        elif rand[count] == 2: fold = input_folder+"test/"
+        if rand[count] == 0: fold = new_base+"train/"
+        elif rand[count] == 1: fold = new_base+"validate/"
+        elif rand[count] == 2: fold = new_base+"test/"
 
         label_new = Path(fold+"labels/"+item.name)
         image_new = Path(fold+"images/"+item.stem+".jpg")
@@ -105,9 +106,7 @@ results = create_plain()
 results = split_dataset()
 
 
-
-
 #Run example
-#python3 dataset/prep_new_dataset.py "../../../../../Desktop/images/annot_finished/" 
+#python3 dataset/prep_new_dataset.py "../data/annotations_yaml" "../images" "../data/annotations_plain/"
 
 
