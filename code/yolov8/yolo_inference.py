@@ -8,6 +8,8 @@ import numpy as np
 from PIL import Image
 import pandas as pd
 import torch
+import glob
+from pathlib import Path
 
 # Decide where to run
 torch.cuda.device_count()
@@ -20,23 +22,23 @@ model = YOLO('models/best_train53.pt')
 
 
 # Perform object detection 
-vid_dir = "../../../../../mnt/BSP_NAS2/Video/Video2022/ROST3/2022-07-01/"
+parent_folder = pathlib.Path("../../../../../mnt/BSP_NAS2/Video/Video2022/FAR1R/2022-07-01/").absolute()
 
-vids = os.listdir(vid_dir)
+vids = list(parent_folder.glob("*.mp4"))
 
 fps = 25
 
 for vid in vids: 
 
     # Pick out relevant video information
-    name = vid.split("_")
+    name = vid.name.split("_")
     time = name[3].split(".")
     ledge = name[1]
 
     starttime = pd.to_datetime(name[2]+" "+time[0]+":"+time[1]+":"+time[2])
     starttime_u = starttime.timestamp()
 
-    results = model(f'{vid_dir}{vid}', stream = True)
+    results = model(parent_folder.joinpath(vid), stream = True)
 
     # Process results list
     time = []
@@ -78,9 +80,9 @@ for vid in vids:
 
     out = out1.merge(out2, left_index = True, right_index = True)
     out["ledge"] = ledge
-    out["filename"] = vid
+    out["filename"] = vid.name
 
-    out.to_csv(f'inference/{vid}.csv')
+    out.to_csv(f'inference/{vid.name}.csv')
 
 
 
