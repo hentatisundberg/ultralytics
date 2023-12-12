@@ -9,7 +9,8 @@ dat["time2"] = pd.to_datetime(dat["time"]*1000*1000*1000)
 
 fig, ax = plt.subplots()
 
-ax.bar(x = dat["time"], height = dat["w"], color = "black", width = 0.01)
-plt.show()
+ax.scatter(x = dat["time"], y=dat["x"], color = "black")
+ax.scatter(x = dat["time"], y=dat["y"], color = "red")
+plt.savefig("this.png")
 
 
