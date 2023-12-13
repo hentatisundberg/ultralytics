@@ -1,16 +1,13 @@
-from ultralytics import YOLO
 import os
-import sys 
-import pathlib
-import numpy as np
-from PIL import Image
+import shutil
+import datetime
 import pandas as pd
-import torch
 
+from ultralytics import YOLO
 
 # Select tracker and adujt tracker parameters in their yaml files
-# tracker = "ultralytics/cfg/trackers/botsort_custom.yaml"
-tracker = "ultralytics/cfg/trackers/bytetrack_custom.yaml"
+tracker = "ultralytics/cfg/trackers/botsort_custom.yaml"
+# tracker = "ultralytics/cfg/trackers/bytetrack_custom.yaml"
 
 tracker_name = tracker.split("/")[-1].split(".")[0]
 
@@ -20,7 +17,9 @@ model = YOLO('models/best_train53.pt')
 # Perform object detection 
 vids = ["Auklab1_FAR3_2022-07-09_04.00.00.mp4"]
 
-# vids = os.listdir("vids/")
+# SetUp output folder to save csv
+output_folder = 'inference/tracking/'+tracker_name+"_____"+datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
+os.mkdir(output_folder)
 
 fps = 25
 
@@ -34,7 +33,7 @@ for vid in vids:
     starttime = pd.to_datetime(name[2]+" "+time[0]+":"+time[1]+":"+time[2])
     starttime_u = starttime.timestamp()
 
-    results = model.track(vid, stream=True, tracker=tracker, save=True, show_labels=True, show_conf=True, show_boxes=True, device=1)
+    results = model.track(vid, stream=True, tracker=tracker, save=True, show_labels=True, show_conf=True, show_boxes=True, device=0)
 
     # Process results list
     time = []
@@ -84,4 +83,5 @@ for vid in vids:
     out["ledge"] = ledge
     out["filename"] = vid
 
-    out.to_csv(f'inference/{vid}_{tracker_name}.csv')
+    shutil.copy2(tracker, output_folder)
+    out.to_csv(f'{output_folder}/{vid}_{tracker_name}.csv')
