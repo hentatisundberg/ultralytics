@@ -16,7 +16,7 @@ tracker_name = tracker.split("/")[-1].split(".")[0]
 model = YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train53.pt")
 
 # Perform object detection 
-vid_dir = pathlib.Path("vids/").absolute()
+vids = ["Auklab1_FAR3_2022-07-09_04.00.00.mp4"]
 #vid_dir = pathlib.Path("../../../../../../mnt/BSP_NAS2/Video/Video2022/ROST3/2022-07-03").absolute()
 
 # SetUp output folder to save csv
