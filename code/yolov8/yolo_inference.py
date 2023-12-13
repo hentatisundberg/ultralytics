@@ -22,7 +22,7 @@ model = YOLO('models/best_train53.pt')
 
 
 # Perform object detection 
-parent_folder = pathlib.Path("../../../../../mnt/BSP_NAS2/Video/Video2022/FAR1R/2022-07-01/").absolute()
+parent_folder = pathlib.Path("../../../../../mnt/BSP_NAS2/Video/Video2022/FAR1R/2022-06-30/").absolute()
 
 vids = list(parent_folder.glob("*.mp4"))
 
