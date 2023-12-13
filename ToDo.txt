@@ -1,8 +1,8 @@
 
 # Complement fishvids.csv with new possibly interesting clips
-# Auto-annotate those
-# Add to dataset 
-# Train yolov8s & yolov8m models with same hyperparameters, compare performance
-  
+
+
+
+
 
 
