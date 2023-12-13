@@ -11,8 +11,8 @@ pt = dat[dat["conf"] > .7]
 
 fig, ax = plt.subplots()
 
-ax.scatter(dat["time2"], dat["x"], color = "black")
-ax.scatter(dat["time2"], dat["y"], color = "red")
+ax.scatter(pt["time2"], pt["x"], color = "black")
+ax.scatter(pt["time2"], pt["y"], color = "red")
 plt.show()
 
 #plt.savefig("temp/plot.png")

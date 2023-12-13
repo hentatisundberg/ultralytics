@@ -1,7 +1,24 @@
 
-# Complement fishvids.csv with new possibly interesting clips
+# AUTO-find interesting clips
+1 detect + track
+2 run summary statistics on tracks
+3 define interesting track features 
+4 add those to fishvids.csv document
+5 run auto_annotate based on new version of fishvids.csv
 
 
+# Auto-mark clip as processed in auto-annotate file 
+
+
+# Tracker parameters 
+1 Make sure a few missing detections is ok... 
+
+
+# Merge tracks
+1 remove all detections without track id
+2 inspect time jump between consecutive tracks
+3 inspect distance between consecuitve tracks 
+4 merge based on empirical rule 
 
 
 
