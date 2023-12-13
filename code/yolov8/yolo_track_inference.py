@@ -12,10 +12,12 @@ tracker = "ultralytics/cfg/trackers/botsort_custom.yaml"
 tracker_name = tracker.split("/")[-1].split(".")[0]
 
 # Load a pretrained YOLO model
-model = YOLO('models/best_train53.pt')
+#model = YOLO('models/best_train53.pt')
+model = YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train53.pt")
 
 # Perform object detection 
-vids = ["Auklab1_FAR3_2022-07-09_04.00.00.mp4"]
+vid_dir = pathlib.Path("vids/").absolute()
+#vid_dir = pathlib.Path("../../../../../../mnt/BSP_NAS2/Video/Video2022/ROST3/2022-07-03").absolute()
 
 # SetUp output folder to save csv
 output_folder = 'inference/tracking/'+tracker_name+"_____"+datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
@@ -26,7 +28,8 @@ fps = 25
 for vid in vids: 
 
     # Pick out relevant video information
-    name = vid.split("_")
+    filename = vid.name
+    name = filename.split("_")
     time = name[3].split(".")
     ledge = name[1]
 
@@ -81,7 +84,11 @@ for vid in vids:
 
     out = out1.merge(out2, left_index = True, right_index = True)
     out["ledge"] = ledge
-    out["filename"] = vid
+    out["filename"] = filename
 
+<<<<<<< HEAD
     shutil.copy2(tracker, output_folder)
     out.to_csv(f'{output_folder}/{vid}_{tracker_name}.csv')
+=======
+    out.to_csv(f'inference/{filename}_{tracker_name}.csv')
+>>>>>>> 6ee53cfd4bfadfe58dc73acf2bb2d23ff67984c7

@@ -7,6 +7,8 @@ import yaml
 
 # First convert yaml to txt 
 # Then split data set, create new folders and thus prepare for upload 
+# Files are copied (not removed) from original directory
+# Labels and images may or may not be in the same folder originally
 
 
 # Directories 
@@ -107,6 +109,6 @@ results = split_dataset()
 
 
 #Run example
-#python3 dataset/prep_new_dataset.py "../data/annotations_yaml" "../images" "../data/annotations_plain/"
+#python3 code/dataset/prep_new_dataset.py "../../../../../mnt/BSP_NAS2_work/fish_model/annotations/v6c" "../../../../../mnt/BSP_NAS2_work/fish_model/annotations/v6c" "../../../../../mnt/BSP_NAS2_work/fish_model/annotations/new/"
 
 

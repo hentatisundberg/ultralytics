@@ -15,14 +15,15 @@ from pathlib import Path
 torch.cuda.device_count()
 
 # Load a pretrained YOLO model
-model = YOLO('models/best_train53.pt')
+#model = YOLO('models/best_train53.pt')
+model = YOLO('../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train53.pt')
 
 #files = os.listdir("images/")
 #files = [pathlib.Path("images/"+item) for item in files]
 
 
 # Perform object detection 
-parent_folder = pathlib.Path("../../../../../mnt/BSP_NAS2/Video/Video2022/FAR1R/2022-07-01/").absolute()
+parent_folder = pathlib.Path("../../../../../mnt/BSP_NAS2/Video/Video2022/BONDEN3/2022-07-04/").absolute()
 
 vids = list(parent_folder.glob("*.mp4"))
 
