@@ -2,7 +2,7 @@ import os
 import shutil
 import datetime
 import pandas as pd
-
+import pathlib 
 from ultralytics import YOLO
 
 # Select tracker and adujt tracker parameters in their yaml files
@@ -13,11 +13,11 @@ tracker_name = tracker.split("/")[-1].split(".")[0]
 
 # Load a pretrained YOLO model
 #model = YOLO('models/best_train53.pt')
-model = YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train53.pt")
+model = YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt")
 
 # Perform object detection 
-vids = ["Auklab1_FAR3_2022-07-09_04.00.00.mp4"]
-#vid_dir = pathlib.Path("../../../../../../mnt/BSP_NAS2/Video/Video2022/ROST3/2022-07-03").absolute()
+vid_dir = pathlib.Path("../../../../../../mnt/BSP_NAS2_work/fish_model/tracking_videos/")
+vids = list(vid_dir.glob("*.mp4"))
 
 # SetUp output folder to save csv
 output_folder = 'inference/tracking/'+tracker_name+"_____"+datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
@@ -86,9 +86,5 @@ for vid in vids:
     out["ledge"] = ledge
     out["filename"] = filename
 
-<<<<<<< HEAD
     shutil.copy2(tracker, output_folder)
-    out.to_csv(f'{output_folder}/{vid}_{tracker_name}.csv')
-=======
-    out.to_csv(f'inference/{filename}_{tracker_name}.csv')
->>>>>>> 6ee53cfd4bfadfe58dc73acf2bb2d23ff67984c7
+    out.to_csv(f'{output_folder}/{filename}_{tracker_name}.csv')
