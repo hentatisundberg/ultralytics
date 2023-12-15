@@ -167,21 +167,18 @@ def write_yaml_to_file(py_obj,filename_simpl):
 ## RUN
 
 # Run video cutting
-results = cut_vid() 
+#results = cut_vid() 
 
 # Extract frames from all vids 
-for file in os.listdir(vid_outfold):
-    save_all_frames()
+#for file in os.listdir(vid_outfold):
+#    save_all_frames()
 
 results = annotate_images()
 
 
 
-# RUN example (JHS MAC)
-#python3 dataset/auto_annotate.py "../data/fishvids.csv" "../vids/" "../vids/" "../images/" "../dataset/annotations/" "../dataset/annotations_yaml/" "../models/best.pt"
-
 # Run example (Sprattus/Larus)
-#python3 code/dataset/auto_annotate.py "data/fishvids.csv" "../../../../../../../mnt/BSP_NAS2/Video/" "vids_temp/" "images/" "data/annotations_yaml/" "../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train53.pt"
+#python3 code/dataset/auto_annotate.py "data/fishvids.csv" "../../../../../../../mnt/BSP_NAS2/Video/" "vids/" "images/" "data/annotations_yaml/" "../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train55.pt"
 
 
 

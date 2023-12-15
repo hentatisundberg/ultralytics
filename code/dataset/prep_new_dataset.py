@@ -79,10 +79,10 @@ def split_dataset():
 
     folds = ["train/", "validate/", "test/"]
     
-    for fold in folds: 
-        os.mkdir(new_base+fold)
-        os.mkdir(new_base+fold+"images/")
-        os.mkdir(new_base+fold+"labels/")
+    #for fold in folds: 
+    #    os.mkdir(new_base+fold)
+    #    os.mkdir(new_base+fold+"images/")
+    #    os.mkdir(new_base+fold+"labels/")
 
     for item in files: 
         label = item
@@ -109,6 +109,6 @@ results = split_dataset()
 
 
 #Run example
-#python3 code/dataset/prep_new_dataset.py "../../../../../mnt/BSP_NAS2_work/fish_model/annotations/v6c" "../../../../../mnt/BSP_NAS2_work/fish_model/annotations/v6c" "../../../../../mnt/BSP_NAS2_work/fish_model/annotations/new/"
+#python3 code/dataset/prep_new_dataset.py "../../../../../mnt/BSP_NAS2_work/fish_model/annotations/v7" "../../../../../mnt/BSP_NAS2_work/fish_model/annotations/v7" "../../../../../mnt/BSP_NAS2_work/fish_model/annotations/"
 
 

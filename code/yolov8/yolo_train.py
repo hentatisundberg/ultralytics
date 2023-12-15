@@ -3,7 +3,7 @@ from ultralytics import YOLO
 
 
 # Load a model
-model = YOLO('runs/detect/train53/weights/best.pt')  # load the best model thus far
+model = YOLO('runs/detect/train55/weights/best.pt')  # load the best model thus far
 
 # Train the model
 results = model.train(data='../config/data.yaml', 
