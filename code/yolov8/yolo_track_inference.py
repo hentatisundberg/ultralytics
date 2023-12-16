@@ -4,9 +4,11 @@ import datetime
 import pandas as pd
 import pathlib 
 from ultralytics import YOLO
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 # Select tracker and adujt tracker parameters in their yaml files
-tracker = "ultralytics/cfg/trackers/botsort_custom.yaml"
+tracker = "ultralytics/cfg/trackers/botsort_custom2.yaml"
 # tracker = "ultralytics/cfg/trackers/bytetrack_custom.yaml"
 
 tracker_name = tracker.split("/")[-1].split(".")[0]
@@ -18,6 +20,7 @@ model = YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57
 # Perform object detection 
 vid_dir = pathlib.Path("../../../../../../mnt/BSP_NAS2_work/fish_model/tracking_videos/")
 vids = list(vid_dir.glob("*.mp4"))
+vids = vids[1:2]
 
 # SetUp output folder to save csv
 output_folder = 'inference/tracking/'+tracker_name+"_____"+datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
@@ -88,3 +91,15 @@ for vid in vids:
 
     shutil.copy2(tracker, output_folder)
     out.to_csv(f'{output_folder}/{filename}_{tracker_name}.csv')
+
+
+# Plot most recent track 
+palette = sns.color_palette("bright")
+sns.set(rc = {'axes.facecolor': 'white'})
+ax = sns.scatterplot(x= out["x"], y=out["y"], hue = out["track_id"].astype("int"), palette = palette)
+ax.invert_yaxis()
+ax.grid(False)
+plt.savefig("temp/"+datetime.datetime.now().strftime("%Y%m%dT%H%M%S"))
+plt.close()
+
+
