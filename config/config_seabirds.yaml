@@ -1,0 +1,5 @@
+names: ["adult", "chick", "egg"]
+nc: 3
+train: ../../../../../../../mnt/BSP_NAS2_work/seabirds/annotations/train
+val: ../../../../../../../mnt/BSP_NAS2_work/seabirds/annotations/validate
+test: ../../../../../../../mnt/BSP_NAS2_work/seabirds/annotations/test

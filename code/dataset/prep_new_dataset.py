@@ -69,7 +69,7 @@ def create_plain():
 def split_dataset():
     files = list(Path(new_base).glob('*.txt'))
     tot = len(files)
-    split_val_test = [.1, 0]
+    split_val_test = [.1, .1]
     nval, ntest = int(round(split_val_test[0]*tot,0)), int(round(split_val_test[1]*tot,0))
     ntrain = tot - (nval+ntest)
     rand = [list(np.repeat(0, ntrain)), list(np.repeat(1, nval)), list(np.repeat(2, ntest))]
@@ -109,6 +109,6 @@ results = split_dataset()
 
 
 #Run example
-#python3 code/dataset/prep_new_dataset.py "../../../../../mnt/BSP_NAS2_work/fish_model/annotations/v7" "../../../../../mnt/BSP_NAS2_work/fish_model/annotations/v7" "../../../../../mnt/BSP_NAS2_work/fish_model/annotations/"
+#python3 code/dataset/prep_new_dataset.py "../../../../../mnt/BSP_NAS2_work/seabirds/annotations/seabirds1" "../../../../../mnt/BSP_NAS2_work/seabirds/annotations/seabirds1" "../../../../../mnt/BSP_NAS2_work/seabirds/annotations/"
 
 
