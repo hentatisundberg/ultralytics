@@ -7,14 +7,13 @@ from ultralytics import YOLO
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+
 # Select tracker and adujt tracker parameters in their yaml files
-tracker = "ultralytics/cfg/trackers/botsort_custom.yaml"
-# tracker = "ultralytics/cfg/trackers/bytetrack_custom.yaml"
+tracker = "ultralytics/cfg/trackers/botsort_custom2.yaml"
 
 tracker_name = tracker.split("/")[-1].split(".")[0]
 
 # Load a pretrained YOLO model
-#model = YOLO('models/best_train53.pt')
 model = YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt")
 
 # Perform object detection 
@@ -40,7 +39,14 @@ for vid in vids:
     starttime = pd.to_datetime(name[2]+" "+time[0]+":"+time[1]+":"+time[2])
     starttime_u = starttime.timestamp()
 
-    results = model.track(vid, stream=True, tracker=tracker, save=False, show_labels=True, show_conf=True, show_boxes=True, device=1)
+    results = model.track(vid, 
+                          stream=True, 
+                          tracker=tracker, 
+                          save=False, 
+                          show_labels=True, 
+                          show_conf=True, 
+                          show_boxes=True, 
+                          device=1)
 
     # Process results list
     time = []

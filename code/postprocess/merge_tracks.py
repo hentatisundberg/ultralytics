@@ -9,7 +9,7 @@ import seaborn as sns
 import warnings
 warnings.filterwarnings('ignore')
 import os
-
+from pathlib import Path
 
 # Read tracks from bytetrack, botsort or similar
 # First merge similar tracks based on threshold
@@ -18,21 +18,21 @@ import os
 
 
 # Arguments: 
-inputfold = "inference/tracking/botsort_custom_____20231217T121704/"
+inputfold = "inference/tracking/botsort_custom2_____20231217T205907/"
 #inputfile = "inference/Auklab1_FAR3_2022-07-08_05.00.00_560_580.mp4_bytetrack_custom.csv"
 
-files = os.listdir(inputfold)
+files = list(Path(inputfold).glob('*.csv'))
 
 for file in files: 
 
-    filedata = file.split("_")
+    filedata = file.name.split("_")
     newname = filedata[1]+"_"+filedata[2]+"_"+filedata[3]
 
-    track_merge_thres = 200
-    track_assign_thres = 200 
+    track_merge_thres = 1000
+    track_assign_thres = 500 
     time_space_scale = .1
 
-    dat = pd.read_csv(inputfold+file)
+    dat = pd.read_csv(file)
     dat["time2"] = pd.to_datetime(dat["time"]*1000*1000*1000)
 
     # Stats for each track 
