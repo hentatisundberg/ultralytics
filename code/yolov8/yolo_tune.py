@@ -2,15 +2,15 @@
 from ultralytics import YOLO
 
 # Load a model
-model = YOLO('runs/detect/train20/weights/best.pt')  # load the best model so far
+model = YOLO('../../../../../../mnt/BSP_NAS2_work/seabirds/models/best_train58.pt')  # load the best model so far
 
 # Tune hyper-parameters 
-model.tune(data='../config/data.yaml', 
-    epochs=20, 
+model.tune(data='../config/config_seabirds.yaml', 
+    epochs=30, 
     iterations = 30, 
     optimizer = 'AdamW', 
     plots = False, 
-    save = True, 
+    save = False, 
     val = False, 
     device = [0, 1])
 
