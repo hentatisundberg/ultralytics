@@ -121,7 +121,7 @@ for file in files:
 
     dat["newtrack2"] = newtrack2
 
-    dat.to_csv("inference/_"+newname+".csv")
+    dat.to_csv("inference/_-"+newname+".csv")
 
 
     # Plot 
@@ -140,7 +140,7 @@ for file in files:
     # Plot most recent track 
     palette = sns.color_palette("bright")
     sns.set(rc = {'axes.facecolor': 'white'})
-    ax = sns.lineplot(x= dat["time2"], y=dat["y"], hue = dat["newtrack2"].astype("int"), palette = palette)
+    ax = sns.lineplot(x= dat["time2"], y=dat["y"], hue = dat["track_id"].astype("int"), palette = palette)
     ax.invert_yaxis()
     ax.grid(False)
     plt.savefig("temp/"+"tracks_time_"+newname+".jpg")
