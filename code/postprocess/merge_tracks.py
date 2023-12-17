@@ -20,13 +20,41 @@ trackstats = trackdat.groupby(["track_id"]).aggregate({
 
 dist = [0]
 elapse = [0]
+comb = [0]
+metric = [0]
 rows = range(1, len(trackstats))
 for row in rows:
-    dist.append(np.sqrt((trackstats["x"]["first"][row]-trackstats["x"]["last"][row-1])**2 + (trackstats["y"]["first"][row]-trackstats["y"]["last"][row-1])**2))
-    elapse.append(trackstats["frame"]["first"][row]-trackstats["frame"]["last"][row-1])    
+    x1 = trackstats["x"]["first"][row]-trackstats["x"]["last"][row-1]
+    x2 = trackstats["x"]["last"][row]-trackstats["x"]["first"][row-1]
+    y1 = trackstats["y"]["first"][row]-trackstats["y"]["last"][row-1]
+    y2 = trackstats["y"]["last"][row]-trackstats["y"]["first"][row-1]
+    z1 = trackstats["frame"]["first"][row]-trackstats["frame"]["last"][row-1]
+    z2 = trackstats["frame"]["last"][row]-trackstats["frame"]["first"][row-1]
+    dist0 = np.sqrt(x1**2 + y1**2)
+    dist1 = np.sqrt(x2**2 +y2**2)
+    mindist = .1*(min(dist0, dist1))
+    minelapse = min(abs(z1), abs(z2))
+    metric.append(mindist*minelapse)
 
-trackstats["dist"] = dist
-trackstats["elapse"] = elapse
+
+
+trackstats["metric"] = metric
+trackstats["merge"] = np.where(trackstats["metric"] < 100, True, False)
+
+# Merge 
+
+rows = range(1, len(trackstats))
+
+newtrack = [trackstats["track_id"][0]]
+for row in rows:
+    if trackstats["merge"][row] == True: 
+        newtrack.append(newtrack[row-1])
+    else: 
+        newtrack.append(trackstats["track_id"][row])
+    
+trackstats["newtrack"] = newtrack
+
+
 
 
 # Plot 
