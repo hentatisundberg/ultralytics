@@ -8,7 +8,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 # Select tracker and adujt tracker parameters in their yaml files
-tracker = "ultralytics/cfg/trackers/botsort_custom2.yaml"
+tracker = "ultralytics/cfg/trackers/botsort_custom.yaml"
 # tracker = "ultralytics/cfg/trackers/bytetrack_custom.yaml"
 
 tracker_name = tracker.split("/")[-1].split(".")[0]
@@ -18,9 +18,10 @@ tracker_name = tracker.split("/")[-1].split(".")[0]
 model = YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt")
 
 # Perform object detection 
-vid_dir = pathlib.Path("../../../../../../mnt/BSP_NAS2_work/fish_model/tracking_videos/")
+#vid_dir = pathlib.Path("../../../../../../mnt/BSP_NAS2_work/fish_model/tracking_videos/")
+vid_dir = pathlib.Path("../../../../../../mnt/BSP_NAS1/Video/Video2023/FAR3/2023-07-05/")
 vids = list(vid_dir.glob("*.mp4"))
-vids = vids[1:2]
+#vids = vids[1:2]
 
 # SetUp output folder to save csv
 output_folder = 'inference/tracking/'+tracker_name+"_____"+datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
@@ -39,7 +40,7 @@ for vid in vids:
     starttime = pd.to_datetime(name[2]+" "+time[0]+":"+time[1]+":"+time[2])
     starttime_u = starttime.timestamp()
 
-    results = model.track(vid, stream=True, tracker=tracker, save=True, show_labels=True, show_conf=True, show_boxes=True, device=0)
+    results = model.track(vid, stream=True, tracker=tracker, save=False, show_labels=True, show_conf=True, show_boxes=True, device=1)
 
     # Process results list
     time = []
@@ -94,12 +95,12 @@ for vid in vids:
 
 
 # Plot most recent track 
-palette = sns.color_palette("bright")
-sns.set(rc = {'axes.facecolor': 'white'})
-ax = sns.scatterplot(x= out["x"], y=out["y"], hue = out["track_id"].astype("int"), palette = palette)
-ax.invert_yaxis()
-ax.grid(False)
-plt.savefig("temp/"+datetime.datetime.now().strftime("%Y%m%dT%H%M%S"))
-plt.close()
+#palette = sns.color_palette("bright")
+#sns.set(rc = {'axes.facecolor': 'white'})
+#ax = sns.scatterplot(x= out["x"], y=out["y"], hue = out["track_id"].astype("int"), palette = palette)
+#ax.invert_yaxis()
+#ax.grid(False)
+#plt.savefig("temp/"+datetime.datetime.now().strftime("%Y%m%dT%H%M%S"))
+#plt.close()
 
 
