@@ -16,7 +16,7 @@ torch.cuda.device_count()
 
 # Load a pretrained YOLO model
 #model = YOLO('models/best_train53.pt')
-model = YOLO('../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train55.pt')
+model = YOLO('../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt')
 
 #files = os.listdir("images/")
 #files = [pathlib.Path("images/"+item) for item in files]
