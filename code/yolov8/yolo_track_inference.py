@@ -42,10 +42,8 @@ for vid in vids:
     results = model.track(vid, 
                           stream=True, 
                           tracker=tracker, 
-                          save=False, 
-                          show_labels=True, 
-                          show_conf=True, 
-                          show_boxes=True, 
+                          save = True,
+                          show = False,
                           device=1)
 
     # Process results list

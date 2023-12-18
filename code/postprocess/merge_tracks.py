@@ -18,7 +18,7 @@ from pathlib import Path
 
 
 # Arguments: 
-inputfold = "inference/tracking/botsort_custom2_____20231217T205907/"
+inputfold = "inference/tracking/botsort_custom2_____20231217T211805/"
 #inputfile = "inference/Auklab1_FAR3_2022-07-08_05.00.00_560_580.mp4_bytetrack_custom.csv"
 
 files = list(Path(inputfold).glob('*.csv'))
