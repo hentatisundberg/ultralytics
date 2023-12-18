@@ -17,28 +17,27 @@ tracker_name = tracker.split("/")[-1].split(".")[0]
 model = YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt")
 
 # Perform object detection 
-#vid_dir = pathlib.Path("../../../../../../mnt/BSP_NAS2_work/fish_model/tracking_videos/")
+vid_dir = pathlib.Path("../../../../../../mnt/BSP_NAS2_work/fish_model/tracking_videos/")
+
+#vid_dir = pathlib.Path("../../../../../mnt/BSP_NAS2/Video/Video2022/FAR3")
 
 
+# If subfold:
+# subfolds = ["2022-07-05/", "2022-07-07/"]
+#vids = []
+#for i in subfolds:
+#    vids.append(list(vid_dir.joinpath(i).glob("*.mp4")))##
 
-vid_dir = pathlib.Path("../../../../../mnt/BSP_NAS2/Video/Video2022/FAR3")
-subfolds = ["2022-07-05/", "2022-07-07/"]
+#vids2 = []
+#for xs in vids:
+#    for x in xs:
+#        vids2.append(x)
+
+#vids = vids2
 
 
-
-#vid_dir2 = pathlib.Path("../../../../../../mnt/BSP_NAS1/Video/Video2023/FAR3/2023-07-05/")
-
-
-vids = []
-
-for i in subfolds:
-    vids.append(list(vid_dir.joinpath(i).glob("*.mp4")))
-
-vids2 = []
-
-for xs in vids:
-    for x in xs:
-        vids2.append(x)
+# Else:
+vids = list(vid_dir.glob("*.mp4"))
 
 
 # SetUp output folder to save csv
@@ -47,7 +46,7 @@ os.mkdir(output_folder)
 
 fps = 25
 
-for vid in vids2: 
+for vid in vids: 
 
     # Pick out relevant video information
     filename = vid.name
@@ -62,7 +61,8 @@ for vid in vids2:
                           stream=True, 
                           tracker=tracker, 
                           save = True,
-                          show = False)
+                          show = False, 
+                          device = 0)
 
     # Process results list
     time = []
