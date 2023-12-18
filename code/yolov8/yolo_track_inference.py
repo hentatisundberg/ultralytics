@@ -18,9 +18,28 @@ model = YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57
 
 # Perform object detection 
 #vid_dir = pathlib.Path("../../../../../../mnt/BSP_NAS2_work/fish_model/tracking_videos/")
-vid_dir = pathlib.Path("../../../../../../mnt/BSP_NAS1/Video/Video2023/FAR3/2023-07-05/")
-vids = list(vid_dir.glob("*.mp4"))
-#vids = vids[1:2]
+
+
+
+vid_dir = pathlib.Path("../../../../../mnt/BSP_NAS2/Video/Video2022/FAR3")
+subfolds = ["2022-07-05/", "2022-07-07/"]
+
+
+
+#vid_dir2 = pathlib.Path("../../../../../../mnt/BSP_NAS1/Video/Video2023/FAR3/2023-07-05/")
+
+
+vids = []
+
+for i in subfolds:
+    vids.append(list(vid_dir.joinpath(i).glob("*.mp4")))
+
+vids2 = []
+
+for xs in vids:
+    for x in xs:
+        vids2.append(x)
+
 
 # SetUp output folder to save csv
 output_folder = 'inference/tracking/'+tracker_name+"_____"+datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
@@ -28,7 +47,7 @@ os.mkdir(output_folder)
 
 fps = 25
 
-for vid in vids: 
+for vid in vids2: 
 
     # Pick out relevant video information
     filename = vid.name
@@ -43,8 +62,7 @@ for vid in vids:
                           stream=True, 
                           tracker=tracker, 
                           save = True,
-                          show = False,
-                          device=1)
+                          show = False)
 
     # Process results list
     time = []
