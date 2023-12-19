@@ -23,7 +23,7 @@ model = YOLO('../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt
 
 
 # Perform object detection 
-parent_folder = pathlib.Path("../../../../../mnt/BSP_NAS2/Video/Video2022/TRI6/2022-07-02/").absolute()
+parent_folder = pathlib.Path("../../../../../mnt/BSP_NAS2/Video/Video2022/TRI6/2022-06-29/").absolute()
 
 vids = list(parent_folder.glob("*.mp4"))
 
@@ -39,7 +39,7 @@ for vid in vids:
     starttime = pd.to_datetime(name[2]+" "+time[0]+":"+time[1]+":"+time[2])
     starttime_u = starttime.timestamp()
 
-    results = model(parent_folder.joinpath(vid), stream = True)
+    results = model(parent_folder.joinpath(vid), stream = True, device = 0)
 
     # Process results list
     time = []
