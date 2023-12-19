@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 
 # Select tracker and adujt tracker parameters in their yaml files
-tracker = "ultralytics/cfg/trackers/botsort_custom2.yaml"
+tracker = "ultralytics/cfg/trackers/bytetrack.yaml"
 
 tracker_name = tracker.split("/")[-1].split(".")[0]
 
