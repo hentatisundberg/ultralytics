@@ -1,8 +1,7 @@
 import pandas as pd
 from pathlib import Path 
 from ultralytics import YOLO
-import seaborn as sns
-import matplotlib.pyplot as plt
+import sys
 
 
 # Select tracker and adujt tracker parameters in their yaml files
@@ -12,12 +11,15 @@ tracker_name = tracker.split("/")[-1].split(".")[0]
 
 # Load a pretrained YOLO model
 model = YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt")
+device = sys.argv[1]
+startrow = int(sys.argv[2])
 
-its = range(0, 10000)
+its = range(startrow, 10000)
 for it in its: 
  
     # Load file which tracks progress
     filelist = pd.read_csv("../../../../../../mnt/BSP_NAS2_work/fish_model/inference_log.csv")
+    
     vid_dir = Path(filelist.iloc[it]["paths"])
     vids = list(vid_dir.glob("*.mp4"))
 
@@ -35,7 +37,7 @@ for it in its:
         t2 = pd.Series(filename).str.contains('01.00.00', regex=False)[0]
         t3 = pd.Series(filename).str.contains('23.00.00', regex=False)[0]
 
-        if all([t1, t2, t3]) == False:  
+        if any([t1, t2, t3]) == False:  
             name = filename.split("_")
             time = name[3].split(".")
             ledge = name[1]
@@ -48,7 +50,7 @@ for it in its:
                                 tracker=tracker, 
                                 save = False,
                                 show = False, 
-                                device = 0, 
+                                device = device, 
                                 persist=True)
 
             # Process results list
