@@ -16,10 +16,12 @@ tracker_name = tracker.split("/")[-1].split(".")[0]
 # Load a pretrained YOLO model
 model = YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt")
 
-# Perform object detection 
-vid_dir = pathlib.Path("../../../../../../mnt/BSP_NAS2_work/fish_model/tracking_videos/")
 
-#vid_dir = pathlib.Path("../../../../../mnt/BSP_NAS2/Video/Video2022/FAR3")
+
+# Perform object detection 
+#vid_dir = pathlib.Path("../../../../../../mnt/BSP_NAS2_work/fish_model/tracking_videos/")
+
+vid_dir = pathlib.Path("../../../../../mnt/BSP_NAS2/Video/Video2022/FAR3/2022-07-05/")
 
 
 # If subfold:
@@ -60,9 +62,10 @@ for vid in vids:
     results = model.track(vid, 
                           stream=True, 
                           tracker=tracker, 
-                          save = True,
+                          save = False,
                           show = False, 
-                          device = 0)
+                          device = 0, 
+                          persist=True)
 
     # Process results list
     time = []
