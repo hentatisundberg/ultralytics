@@ -1,9 +1,7 @@
 import pandas as pd
 from pathlib import Path 
 from ultralytics import YOLO
-import seaborn as sns
-import matplotlib.pyplot as plt
-
+import sys
 
 # Select tracker and adujt tracker parameters in their yaml files
 tracker = "ultralytics/cfg/trackers/bytetrack.yaml"
@@ -13,6 +11,14 @@ tracker_name = tracker.split("/")[-1].split(".")[0]
 # Load a pretrained YOLO model
 model = YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt")
 
+# Input arguments 
+device = sys.argv[1]
+startrow = int(sys.argv[2])
+
+# Output folder
+output_folder = Path("../../../../../../mnt/BSP_NAS2_work/fish_model/inference")
+
+# Iterate 
 its = range(startrow, 10000)
 for it in its: 
  
@@ -38,8 +44,10 @@ for it in its:
         t1 = pd.Series(filename).str.contains('00.00.00', regex=False)[0]
         t2 = pd.Series(filename).str.contains('01.00.00', regex=False)[0]
         t3 = pd.Series(filename).str.contains('23.00.00', regex=False)[0]
+        l = [t1, t2, t3]
 
-        if any([t1, t2, t3]) == False:  
+        if True not in l and vid.stem not in donefiles:  
+
             name = filename.split("_")
             time = name[3].split(".")
             ledge = name[1]
@@ -52,7 +60,7 @@ for it in its:
                                 tracker=tracker, 
                                 save = False,
                                 show = False, 
-                                device = 0, 
+                                device = device, 
                                 persist=True)
 
             # Process results list
@@ -97,5 +105,5 @@ for it in its:
             out["ledge"] = ledge
             out["filename"] = filename
 
-            out.to_csv(output_folder.joinpath(filename[:-4]+".csv"))
+            out.to_csv(output_folder.joinpath(vid.stem+".csv"))
 
