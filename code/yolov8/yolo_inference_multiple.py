@@ -13,16 +13,13 @@ tracker_name = tracker.split("/")[-1].split(".")[0]
 # Load a pretrained YOLO model
 model = YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt")
 
-its = range(0, 10000)
+its = range(startrow, 10000)
 for it in its: 
  
-    # Load file which tracks progress
+    # Load file with all planned files
     filelist = pd.read_csv("../../../../../../mnt/BSP_NAS2_work/fish_model/inference_log.csv")
     vid_dir = Path(filelist.iloc[it]["paths"])
     vids = list(vid_dir.glob("*.mp4"))
-
-    # SetUp output folder to save csv
-    output_folder = Path("../../../../../../mnt/BSP_NAS2_work/fish_model/inference/")
 
     fps = 25
 
@@ -31,11 +28,18 @@ for it in its:
         # Pick out relevant video information
         filename = vid.name
 
+        # Check that file has not been processed already 
+        donefiles = []
+        temp = list(output_folder.glob("*.csv"))
+        for i in temp: 
+            donefiles.append(i.stem)    
+
+        # Do not process night videos
         t1 = pd.Series(filename).str.contains('00.00.00', regex=False)[0]
         t2 = pd.Series(filename).str.contains('01.00.00', regex=False)[0]
         t3 = pd.Series(filename).str.contains('23.00.00', regex=False)[0]
 
-        if all([t1, t2, t3]) == False:  
+        if any([t1, t2, t3]) == False:  
             name = filename.split("_")
             time = name[3].split(".")
             ledge = name[1]
