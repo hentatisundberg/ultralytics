@@ -17,20 +17,10 @@ from pathlib import Path
 # Saving new csv in the end  
 
 
-# Arguments: 
-inputfold = "inference/tracking/botsort_custom2_____20231217T211805/"
-#inputfile = "inference/Auklab1_FAR3_2022-07-08_05.00.00_560_580.mp4_bytetrack_custom.csv"
-
-files = list(Path(inputfold).glob('*.csv'))
-
-for file in files: 
+def merge_tracks():
 
     filedata = file.name.split("_")
     newname = filedata[1]+"_"+filedata[2]+"_"+filedata[3]
-
-    track_merge_thres = 1000
-    track_assign_thres = 500 
-    time_space_scale = .1
 
     dat = pd.read_csv(file)
     dat["time2"] = pd.to_datetime(dat["time"]*1000*1000*1000)
@@ -59,7 +49,6 @@ for file in files:
         minelapse = min(abs(z1), abs(z2))
         metric.append(mindist*minelapse)
 
-
     trackstats["metric"] = metric
     trackstats["merge"] = np.where(trackstats["metric"] < track_merge_thres, True, False)
 
@@ -74,16 +63,20 @@ for file in files:
         else: 
             newtrack.append(trackstats["track_id"][row])
         
-
     trackstats["newtrack"] = newtrack
     df = pd.DataFrame(trackstats[["track_id", "newtrack"]]).droplevel(1, axis = 1)
-
 
     # Combine with original df
     dat = dat.merge(df, on = "track_id", how = "left")
 
+    # Remove unassigned
+    dat = dat[dat["track_id"] > 0]
 
-    # Go through df, check if unassigned points are close enough to tracks before or after
+    # Save
+    dat.to_csv("inference/merged/"+newname)
+
+
+def assign_points(): # Go through df, check if unassigned points are close enough to tracks before or after
 
     rows = range(0, len(dat))
     newtrack2 = []
@@ -121,30 +114,64 @@ for file in files:
 
     dat["newtrack2"] = newtrack2
 
-    dat.to_csv("inference/_-"+newname+".csv")
 
+def plot_tracks():
+    
+    #filedata = file.name.split("_")
+    #newname = filedata[1]+"_"+filedata[2]+"_"+filedata[3]
 
-    # Plot 
+    dat = pd.read_csv(file)
+    dat["time2"] = pd.to_datetime(dat["time"]*1000*1000*1000)
 
-    # Plot most recent track 
+    # Stats for each track 
+    dat = dat[dat["track_id"] != -1]
+
+    # Plot orig tracks in space 
     palette = sns.color_palette("bright")
     sns.set(rc = {'axes.facecolor': 'white'})
-    ax = sns.scatterplot(x= dat["x"], y=dat["y"], hue = dat["newtrack2"].astype("int"), palette = palette)
+    ax = sns.scatterplot(x= dat["x"], y=dat["y"], hue = dat["newtrack"].astype("int"), palette = palette)
     ax.invert_yaxis()
     ax.grid(False)
-    plt.savefig("temp/"+"tracks_space_"+newname+".jpg")
+    plt.savefig("temp/"+"tracks_space_"+file.stem+".jpg")
     plt.close()
 
+    # Plot new tracks in space 
+    palette = sns.color_palette("bright")
+    sns.set(rc = {'axes.facecolor': 'white'})
+    ax = sns.scatterplot(x= dat["x"], y=dat["y"], hue = dat["track_id"].astype("int"), palette = palette)
+    ax.invert_yaxis()
+    ax.grid(False)
+    plt.savefig("temp/"+"tracks_space_"+file.stem+"orig.jpg")
+    plt.close()
 
-
-    # Plot most recent track 
+    # Plot tracks over time 
     palette = sns.color_palette("bright")
     sns.set(rc = {'axes.facecolor': 'white'})
     ax = sns.lineplot(x= dat["time2"], y=dat["y"], hue = dat["track_id"].astype("int"), palette = palette)
     ax.invert_yaxis()
     ax.grid(False)
-    plt.savefig("temp/"+"tracks_time_"+newname+".jpg")
+    plt.savefig("temp/"+"tracks_time_"+file.stem+".jpg")
     plt.close()
 
+
+
+# Arguments: 
+inputfold = "inference/orig/"
+outputfold = "inference/merged/"
+track_merge_thres = 1000
+track_assign_tres = 500
+conf_thresh = .5
+time_space_scale = .1 # Low value = generous to time jumps
+
+# RUN 
+# Merge tracks 
+files = list(Path(inputfold).glob('*.csv'))
+for file in files: 
+    merge_tracks()
+
+# Plot tracks 
+files = list(Path(outputfold).glob('*.csv'))
+for file in files: 
+    plot_tracks()
 
 
