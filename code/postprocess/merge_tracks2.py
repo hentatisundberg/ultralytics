@@ -3,7 +3,6 @@
 
 import pandas as pd
 import numpy as np
-import seaborn as sns
 import warnings
 warnings.filterwarnings('ignore')
 import os
@@ -15,35 +14,59 @@ from pathlib import Path
 # Saving new csv in the end  
 
 
-def calc_dist(file,start,end):
+# FIX
+# Distance scaling
+# All combinations or tracks to start with
+# How tracks are actually merged
+# How this is iterated over until no more tracks are merged
 
-    dat = pd.read_csv(file)
-    
-    # Stats for each track 
-    dat[dat["track_id"] != -1]
 
-    tr = dat.groupby(["track_id"], as_index = False).aggregate({
-        "frame": ["first", "last"], 
-        "x": ["first", "last"],
-        "y": ["first", "last"],
-        })
+dat = pd.read_csv("inference/orig/Auklab1_FAR3_2022-06-19_17.00.00.csv")
+dat[dat["track_id"] != -1]
 
-    x1 = tr["x"]["first"][start]-tr["x"]["last"][end]
-    x2 = tr["x"]["last"][start]-tr["x"]["first"][end]
-    y1 = tr["y"]["first"][start]-tr["y"]["last"][end]
-    y2 = tr["y"]["last"][start]-tr["y"]["first"][end]
-    
-    
-        z1 = trackstats["frame"]["first"][row]-trackstats["frame"]["last"][row-1]
-        z2 = trackstats["frame"]["last"][row]-trackstats["frame"]["first"][row-1]
-        dist0 = np.sqrt(x1**2 + y1**2)
-        dist1 = np.sqrt(x2**2 +y2**2)
-        mindist = time_space_scale*(min(dist0, dist1))
-        minelapse = min(abs(z1), abs(z2))
-        metric.append(mindist*minelapse)
 
-    trackstats["metric"] = metric
-    trackstats["merge"] = np.where(trackstats["metric"] < track_merge_thres, True, False)
+start = 4599
+end = 4588
+size = 6
+d1 = dat[dat["track_id"] == start][["x", "y", "frame"]]
+d2 = dat[dat["track_id"] == end][["x", "y", "frame"]]
+if len(d1) < size: 
+    ss1 = len(d1)
+else: 
+    ss1 = size
+
+if len(d2) < size: 
+    ss2 = len(d2)
+else: 
+    ss2 = size
+
+d1s = d1.sample(ss1)
+d2s = d2.sample(ss2)
+
+d1l = d1s.values.tolist()
+d2l = d2s.values.tolist()
+
+
+# All combinations
+
+def euclidean(v1, v2):
+    return sum((p-q)**2 for p, q in zip(v1, v2)) ** .5
+
+dist = []
+for i in d1l:
+    foo = [euclidean(i, j) for j in d2l]
+    dist.append(foo)
+
+dist2 = []
+for xs in dist:
+    for x in xs:
+        dist2.append(x)
+
+min(dist2)
+
+
+
+
 
     # Merge 
 
