@@ -87,8 +87,8 @@ def merge_tracks(input_data):
                 comblist = pd.DataFrame(combinations(ids, 2))
                 ntracks = len(ids)
                 ncombs = len(comblist)
-                print(f'Chunk {j} of {n_it}')
-                print(f'Number of tracks = {ntracks}')
+                #print(f'Chunk {j} of {n_it}')
+                #print(f'Number of tracks = {ntracks}')
                 distance = []
 
                 for i in range(0, ncombs):
@@ -145,12 +145,12 @@ def merge_tracks(input_data):
                     oldtrack = nearest[1].item()
                     newtrack = nearest[0].item()
                     dx.loc[dx["track_id"] == oldtrack, "track_id"] = newtrack
-                    print(f'Track {oldtrack} merged with track {newtrack} inside chunk {j}')
+                    #print(f'Track {oldtrack} merged with track {newtrack} inside chunk {j}')
                 else:
-                    print("No more tracks to merge")
+                    #print("No more tracks to merge")
                     iterate = 0
             else: 
-                print("All tracks merged...")
+                #print("All tracks merged...")
                 iterate = 0
         outdata = pd.concat([outdata, dx])
     return outdata
@@ -254,6 +254,8 @@ def insert_to_db(file):
 def run_multiple(dir):
     dir = Path(dir)
     allfiles = list(dir.glob("*"))
+    nfiles = len(allfiles)
+    counter = 0
     for file in allfiles:
         orig_file = file
         #file_name = file.stem
@@ -265,6 +267,8 @@ def run_multiple(dir):
         output5 = merge_tracks(output4)
         ss = calc_stats(output5, orig_file)
         insert_to_db(ss)
+        counter += 1
+        print(f'Finished with file {counter} of {nfiles}')
 
 def run_single(file):
     orig_file = Path(file)
@@ -287,7 +291,7 @@ time_scaling = .1
 chunksize = 10
 
 # Run multiple
-run_multiple("inference/orig/")
+run_multiple("../../../../../mnt/BSP_NAS2_work/fish_model/inference")
 
 # Run one 
 #ss = run_single("inference/orig/Auklab1_FAR3_2022-07-05_11.00.00.csv")
