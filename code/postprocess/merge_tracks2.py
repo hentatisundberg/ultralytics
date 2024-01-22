@@ -7,6 +7,12 @@ import warnings
 warnings.filterwarnings('ignore')
 import os
 from pathlib import Path
+from itertools import combinations
+import sys
+import seaborn as sns
+import matplotlib.pyplot as plt
+import sqlite3
+
 
 # Read tracks from bytetrack, botsort or similar
 # First merge similar tracks based on threshold
@@ -15,79 +21,273 @@ from pathlib import Path
 
 
 # FIX
-# Distance scaling
-# All combinations or tracks to start with
 # How tracks are actually merged
 # How this is iterated over until no more tracks are merged
+# pairw = pd.DataFrame(list(product(t1, t2)), columns = ["t1", "t2"])
 
 
-dat = pd.read_csv("inference/orig/Auklab1_FAR3_2022-06-19_17.00.00.csv")
-dat[dat["track_id"] != -1]
-
-
-start = 4599
-end = 4588
-size = 6
-d1 = dat[dat["track_id"] == start][["x", "y", "frame"]]
-d2 = dat[dat["track_id"] == end][["x", "y", "frame"]]
-if len(d1) < size: 
-    ss1 = len(d1)
-else: 
-    ss1 = size
-
-if len(d2) < size: 
-    ss2 = len(d2)
-else: 
-    ss2 = size
-
-d1s = d1.sample(ss1)
-d2s = d2.sample(ss2)
-
-d1l = d1s.values.tolist()
-d2l = d2s.values.tolist()
-
-
-# All combinations
-
+# Functions 
 def euclidean(v1, v2):
     return sum((p-q)**2 for p, q in zip(v1, v2)) ** .5
 
-dist = []
-for i in d1l:
-    foo = [euclidean(i, j) for j in d2l]
-    dist.append(foo)
 
-dist2 = []
-for xs in dist:
-    for x in xs:
-        dist2.append(x)
+def create_connection(db_file):
+    """ create a database connection to the SQLite database
+        specified by db_file
+    :param db_file: database file
+    :return: Connection object or None
+    """
+    conn = None
+    try:
+        conn = sqlite3.connect(db_file)
+        return conn
+    except sqlite3.Error as e:
+        print(e)
 
-min(dist2)
+    return conn
 
 
+def merge_tracks(input_data):
+
+    dat = input_data
+    dat = dat[dat["track_id"] != -1]
+    ids = dat["track_id"].unique()
+    outdata = pd.DataFrame()
+    
+    if len(ids) > chunksize:
+        multiple = 1
+    else: 
+        multiple = 0
+
+    if multiple == 1:
+        n_it = int(np.ceil(len(ids)/chunksize))
+        res = []
+        for i in list(range(0, n_it)):
+            for ele in range(chunksize):
+                res.append(i)
+        res = res[0:len(ids)] # How to split dataset
+        df = pd.DataFrame(list(ids), columns = ["ids"])
+        df["res"] = res
+    else:
+        n_it = 1
+        df = pd.DataFrame(list(ids), columns = ["ids"])
+        df["res"] = 0
+    
+    for j in range(0, n_it): 
+
+        iterate = 1 # Initiate loop
+        current = df[df["res"] == j]["ids"]
+        dx = dat[dat["track_id"].isin(current)]
+
+        while iterate == 1: 
+
+            ids = dx["track_id"].unique()
+            
+            if len(ids) > 1:
+                comblist = pd.DataFrame(combinations(ids, 2))
+                ntracks = len(ids)
+                ncombs = len(comblist)
+                print(f'Chunk {j} of {n_it}')
+                print(f'Number of tracks = {ntracks}')
+                distance = []
+
+                for i in range(0, ncombs):
+
+                    d1 = dx[dx["track_id"] == comblist.iloc[i][0]][["x", "y", "frame"]]
+                    d2 = dx[dx["track_id"] == comblist.iloc[i][1]][["x", "y", "frame"]]
+                    
+                    if len(d1) < size: 
+                        ss1 = len(d1)
+                    else: 
+                        ss1 = size
+
+                    if len(d2) < size: 
+                        ss2 = len(d2)
+                    else: 
+                        ss2 = size
+
+                    d1first = d1.iloc[0:1]
+                    d1last = d1.iloc[-1:]
+                    
+                    d2first = d2.iloc[0:1]
+                    d2last = d2.iloc[-1:]
+
+                    d1sample = d1.sample(ss1)
+                    d2sample = d2.sample(ss2)
+
+                    d1s = pd.concat([d1first, d1sample, d1last])
+                    d2s = pd.concat([d2first, d2sample, d2last])
+
+                    d1s["frame"] = d1s["frame"]*time_scaling
+                    d2s["frame"] = d2s["frame"]*time_scaling
+
+                    d1l = d1s.values.tolist()
+                    d2l = d2s.values.tolist()
+
+                    # All combinations
+
+                    dist = []
+                    for i in d1l:
+                        foo = [euclidean(i, j) for j in d2l]
+                        dist.append(foo)
+
+                    dist2 = []
+                    for xs in dist:
+                        for x in xs:
+                            dist2.append(x)
+
+                    distance.append(min(dist2))
+
+                comblist["distance"] = distance
+                nearest = comblist[comblist["distance"] == min(comblist["distance"])]
+
+                if nearest["distance"].item() < track_merge_thresh:
+                    oldtrack = nearest[1].item()
+                    newtrack = nearest[0].item()
+                    dx.loc[dx["track_id"] == oldtrack, "track_id"] = newtrack
+                    print(f'Track {oldtrack} merged with track {newtrack} inside chunk {j}')
+                else:
+                    print("No more tracks to merge")
+                    iterate = 0
+            else: 
+                print("All tracks merged...")
+                iterate = 0
+        outdata = pd.concat([outdata, dx])
+    return outdata
+
+def calc_stats(input_data, orig_file): 
+    name = orig_file
+    dat = input_data
+    dat["time2"] = pd.to_datetime(dat["time"]*1000*1000*1000)
+    dat["width"] = abs(dat["x"]-dat["w"])
+    dat["height"] = abs(dat["y"]-dat["h"])
+    maxdim = []
+    mindim = []
+    for i in range(0, len(dat)):
+        maxdim.append(max(dat.iloc[i]["width"], dat.iloc[i]["height"]))
+        mindim.append(min(dat.iloc[i]["width"], dat.iloc[i]["height"]))
+    dat["maxdim"] = maxdim
+    dat["mindim"] = mindim
+
+    dat["xdiff"] = dat["x"].diff().abs()
+    dat["ydiff"] = dat["y"].diff().abs()
+
+    stats = dat.groupby(["track_id"]).agg({"time2": ["min", "max"], 
+                                            "frame": "count", 
+                                            "x": ["first", "std", "last"],
+                                            "y": ["first", "std", "last"], 
+                                            "conf": ["min", "mean", "max"], 
+                                            "mindim": ["mean", "std"], 
+                                            "maxdim": ["mean", "std"],
+                                            "xdiff": "sum",
+                                            "ydiff": "sum"})
+    
+    stats = stats.droplevel(1, axis = 1).reset_index()
+    
+    cols = ["track", 'start','end', 'nframes', "x_first", "x_std", "x_last", "y_first", "y_std", "y_last", "conf_min", "conf_mean", "conf_max", "mindim_mean", "mindim_std", "maxdim_mean", "maxdim_std", "x_dist", "y_dist"]
+    stats.columns = cols
+    
+    timeelapse = stats["end"]-stats["start"]
+    dur = []
+    for i in timeelapse:
+        dur.append(i.total_seconds())    
+    stats["dur_s"] = dur
+
+    xx = name.stem
+
+    stats["file"] = xx
+    
+    ledge = xx.split("_")[1]
+    dates = xx.split("_")[2].split("-")
+    dateval = dates[0][2:4]+dates[1]+dates[2]
+    time = xx.split("_")[3][0:2]
+    a = pd.Series(stats.index).astype("int").astype("str")
+    stats["file_id"] = ledge+dateval+time
+    b = stats["file_id"].reset_index()["file_id"]
+    stats["track_id"] = b+"-"+a
+
+    stats["Ledge"] = ledge    
+
+    return(stats)
 
 
+def plot_tracks(input_data):
+    dat = input_data
+    dat["time2"] = pd.to_datetime(dat["time"]*1000*1000*1000)
 
-    # Merge 
+    # General plotting features
+    palette = sns.color_palette("bright")
+    sns.set(rc = {'axes.facecolor': 'white'})
+    
+    # Plot new tracks in space 
+    #ax = sns.scatterplot(x= dat["x"], y=dat["y"], hue = dat["track_id"].astype("int"), palette = palette)
+    #ax.invert_yaxis()
+    #ax.grid(False)
+    #plt.show()
+    #plt.savefig("temp/"+"tracks_space_"+file_name+"orig.jpg")
+    #plt.close()
 
-    rows = range(1, len(trackstats))
+    # Plot tracks over time 
+    ax = sns.scatterplot(x= dat["time2"], y=dat["y"], hue = dat["track_id"].astype("int"), palette = palette)
+    ax = sns.lineplot(x= dat["time2"], y=dat["y"], hue = dat["track_id"].astype("int"), palette = palette)
+    ax.invert_yaxis()
+    ax.grid(False)
+    plt.show()
+    #plt.savefig("temp/"+"tracks_time_"+file_name+".jpg")
+    #plt.close()
 
-    newtrack = [trackstats["track_id"][0]]
-    for row in rows:
-        if trackstats["merge"][row] == True: 
-            newtrack.append(newtrack[row-1])
-        else: 
-            newtrack.append(trackstats["track_id"][row])
-        
-    trackstats["newtrack"] = newtrack
-    df = pd.DataFrame(trackstats[["track_id", "newtrack"]]).droplevel(1, axis = 1)
+def prep_data(input):
+    if input.is_file:
+        output = pd.read_csv(input)
+    else: 
+        output = input
+    return output 
 
-    # Combine with original df
-    dat = dat.merge(df, on = "track_id", how = "left")
+def insert_to_db(file):
+    file = file 
+    #file["file"] = file
+    file = file.reset_index()
+    file = file[file["nframes"] > 10]
+    con_local = create_connection("inference/Inference.db")
+    file.to_sql("Inference", con_local, if_exists='append')
 
-    # Remove unassigned
-    dat = dat[dat["track_id"] > 0]
+def run_multiple(dir):
+    dir = Path(dir)
+    allfiles = list(dir.glob("*"))
+    for file in allfiles:
+        orig_file = file
+        #file_name = file.stem
+        #print(file_name)
+        output1 = merge_tracks(prep_data(orig_file))
+        output2 = merge_tracks(output1)
+        output3 = merge_tracks(output2)
+        output4 = merge_tracks(output3)
+        output5 = merge_tracks(output4)
+        ss = calc_stats(output5, orig_file)
+        insert_to_db(ss)
 
-    # Save
-    dat.to_csv("inference/merged/"+newname)
+def run_single(file):
+    orig_file = Path(file)
+    print(orig_file)
+    output1 = merge_tracks(prep_data(orig_file))
+    output2 = merge_tracks(output1)
+    output3 = merge_tracks(output2)
+    output4 = merge_tracks(output3)
+    output5 = merge_tracks(output4)
+    ss = calc_stats(output5, orig_file)
+    print(ss)
+    plot_tracks(output5)
+    return(ss)
 
+
+# Set params
+size = 40
+track_merge_thresh = 300
+time_scaling = .1
+chunksize = 10
+
+# Run multiple
+run_multiple("inference/orig/")
+
+# Run one 
+#ss = run_single("inference/orig/Auklab1_FAR3_2022-07-05_11.00.00.csv")
