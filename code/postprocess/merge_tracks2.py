@@ -155,6 +155,64 @@ def merge_tracks(input_data):
         outdata = pd.concat([outdata, dx])
     return outdata
 
+
+def associate_points(track_data, all_data):
+    tracks = track_data["track_id"].unique().astype("int")
+    unassoc = all_data
+    unassoc = unassoc[unassoc["track_id"] == -1]
+    outdata = pd.DataFrame()
+    
+    for track in tracks: 
+
+        track_temp = track_data[track_data["track_id"] == track]
+        minf, maxf = np.min(track_temp["frame"]), np.max(track_temp["frame"])
+        candidates = unassoc.loc[(unassoc["frame"] > minf-framedist) & (unassoc["frame"] < maxf+framedist)]
+
+        iterate = 1 # Initiate loop       
+        while iterate == 1: 
+    
+            d1 = track_temp[["x", "y", "frame"]]
+            d2 = candidates[["x", "y", "frame"]]
+
+            if len(d1) < size: 
+                ss1 = len(d1)
+            else: 
+                ss1 = size
+
+            d1first = d1.iloc[0:1]
+            d1last = d1.iloc[-1:]
+            d1sample = d1.sample(ss1)
+            d1s = pd.concat([d1first, d1sample, d1last])
+
+            d1s["frame"] = d1s["frame"]*time_scaling_assign
+            d2["frame"] = d2["frame"]*time_scaling_assign
+
+            # Min distance per point to track
+            dist = []
+
+            # Loop through each candidate point, recover its min distance 
+            points = range(0, len(d2))
+            for point in points: 
+                p = np.array(d2.iloc[point].tolist())
+                d = np.linalg.norm(p - np.array(d1s.values.tolist()), axis=1)
+                dist.append(np.min(d))
+                
+            nearest = np.min(dist)
+
+            if nearest < track_assign_thresh:
+                minpos = candidates.loc[dist == nearest]
+                minpos["track_id"] = track
+                track_temp = pd.concat([track_temp, minpos]) # Update track data
+                candidates.drop(minpos.index, inplace = True) # Delete from candidates
+                nrow = len(track_temp) 
+                #print(f'Track {track} now includes {nrow} points')
+            else:
+                #print("No more tracks to merge")
+                iterate = 0
+                outdata = pd.concat([outdata, track_temp])
+    return outdata
+
+
 def calc_stats(input_data, orig_file): 
     name = orig_file
     dat = input_data
