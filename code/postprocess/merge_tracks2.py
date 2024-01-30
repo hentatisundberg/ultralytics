@@ -1,6 +1,5 @@
 
 
-
 import pandas as pd
 import numpy as np
 import warnings
@@ -8,6 +7,7 @@ warnings.filterwarnings('ignore')
 import os
 from pathlib import Path
 from itertools import combinations
+from itertools import product
 import sys
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -127,8 +127,8 @@ def merge_tracks(input_data):
                     # All combinations
 
                     dist = []
-                    for i in d1l:
-                        foo = [euclidean(i, j) for j in d2l]
+                    for k in d1l:
+                        foo = [euclidean(k, j) for j in d2l]
                         dist.append(foo)
 
                     dist2 = []
@@ -139,7 +139,7 @@ def merge_tracks(input_data):
                     distance.append(min(dist2))
 
                 comblist["distance"] = distance
-                nearest = comblist[comblist["distance"] == min(comblist["distance"])]
+                nearest = comblist[comblist["distance"] == min(comblist["distance"])][0:1]
 
                 if nearest["distance"].item() < track_merge_thresh:
                     oldtrack = nearest[1].item()
@@ -158,6 +158,7 @@ def merge_tracks(input_data):
 
 def associate_points(track_data, all_data):
     tracks = track_data["track_id"].unique().astype("int")
+    
     unassoc = all_data
     unassoc = unassoc[unassoc["track_id"] == -1]
     outdata = pd.DataFrame()
@@ -197,6 +198,8 @@ def associate_points(track_data, all_data):
                 d = np.linalg.norm(p - np.array(d1s.values.tolist()), axis=1)
                 dist.append(np.min(d))
                 
+            #print(track)
+            #print(dist)
             nearest = np.min(dist)
 
             if nearest < track_assign_thresh:
@@ -205,6 +208,9 @@ def associate_points(track_data, all_data):
                 track_temp = pd.concat([track_temp, minpos]) # Update track data
                 candidates.drop(minpos.index, inplace = True) # Delete from candidates
                 nrow = len(track_temp) 
+                if len(candidates) == 0:
+                    iterate = 0
+                    outdata = pd.concat([outdata, track_temp])
                 #print(f'Track {track} now includes {nrow} points')
             else:
                 #print("No more tracks to merge")
@@ -265,13 +271,18 @@ def calc_stats(input_data, orig_file):
     stats["track_id"] = b+"-"+a
 
     stats["Ledge"] = ledge    
+    stats["detect_dens"] = stats["nframes"]/stats["dur_s"]
 
+    printstats = stats[["track_id", "start", "end", "nframes", "conf_mean", "x_dist", "y_dist", "dur_s"]]
+    print(printstats.sort_values(by = ["conf_mean"], ascending = False))
     return(stats)
 
 
-def plot_tracks(input_data):
-    dat = input_data
+def plot_tracks(track_data, all_data):
+    all_data = pd.read_csv(all_data)
+    dat = track_data
     dat["time2"] = pd.to_datetime(dat["time"]*1000*1000*1000)
+    all_data["time2"] = pd.to_datetime(all_data["time"]*1000*1000*1000)
 
     # General plotting features
     palette = sns.color_palette("bright")
@@ -286,8 +297,9 @@ def plot_tracks(input_data):
     #plt.close()
 
     # Plot tracks over time 
-    ax = sns.scatterplot(x= dat["time2"], y=dat["y"], hue = dat["track_id"].astype("int"), palette = palette)
-    ax = sns.lineplot(x= dat["time2"], y=dat["y"], hue = dat["track_id"].astype("int"), palette = palette)
+    ax = sns.scatterplot(x= dat["time2"], y=dat["x"], hue = dat["track_id"].astype("int"), palette = palette)
+    ax = sns.lineplot(x= dat["time2"], y=dat["x"], hue = dat["track_id"].astype("int"), palette = palette)
+    ax = sns.scatterplot(x = all_data["time2"], y = all_data["x"], size = .1, color = "black", marker = "+")
     ax.invert_yaxis()
     ax.grid(False)
     plt.show()
@@ -318,38 +330,49 @@ def run_multiple(dir):
         orig_file = file
         #file_name = file.stem
         #print(file_name)
+        precheck = prep_data(orig_file)
+        if len(precheck["track_id"].unique()) > 1:
+            output1 = merge_tracks(prep_data(orig_file))
+            output2 = merge_tracks(output1)
+            output3 = merge_tracks(output2)
+            output4 = merge_tracks(output3)
+            output5 = merge_tracks(output4)
+            output6 = associate_points(output5, prep_data(orig_file))
+            output7 = merge_tracks(output6)
+            ss = calc_stats(output7, orig_file)
+            insert_to_db(ss)
+            print(f'Finished with file {counter} of {nfiles}')
+        counter += 1
+
+def run_single(file):
+    orig_file = Path(file)
+    print(orig_file)
+    precheck = prep_data(orig_file)
+    if len(precheck["track_id"].unique()) > 1:
         output1 = merge_tracks(prep_data(orig_file))
         output2 = merge_tracks(output1)
         output3 = merge_tracks(output2)
         output4 = merge_tracks(output3)
         output5 = merge_tracks(output4)
-        ss = calc_stats(output5, orig_file)
-        insert_to_db(ss)
-        counter += 1
-        print(f'Finished with file {counter} of {nfiles}')
-
-def run_single(file):
-    orig_file = Path(file)
-    print(orig_file)
-    output1 = merge_tracks(prep_data(orig_file))
-    output2 = merge_tracks(output1)
-    output3 = merge_tracks(output2)
-    output4 = merge_tracks(output3)
-    output5 = merge_tracks(output4)
-    ss = calc_stats(output5, orig_file)
-    print(ss)
-    plot_tracks(output5)
-    return(ss)
-
+        output6 = associate_points(output5, prep_data(orig_file))
+        output7 = merge_tracks(output6)
+        ss = calc_stats(output7, orig_file)
+        plot_tracks(output7, orig_file)
+        return(ss, output7)
 
 # Set params
-size = 40
+size = 30
 track_merge_thresh = 300
+track_assign_thresh = 100
 time_scaling = .1
+time_scaling_assign = 1
 chunksize = 10
+framedist = 200
 
 # Run multiple
-run_multiple("../../../../../mnt/BSP_NAS2_work/fish_model/inference")
+multpath = "../../../../../mnt/BSP_NAS2_work/fish_model/inference"
+run_multiple("inference/orig")
 
 # Run one 
-#ss = run_single("inference/orig/Auklab1_FAR3_2022-07-05_11.00.00.csv")
+#run_single("inference/orig/Auklab1_FAR3_2022-06-27_22.00.00.csv")
+

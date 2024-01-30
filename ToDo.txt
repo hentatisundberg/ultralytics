@@ -1,4 +1,9 @@
 
+
+# point density (frames/dur) as calculated stats variable 
+
+
+
 # AUTO-find interesting clips
 1 detect + track
 2 run summary statistics on tracks

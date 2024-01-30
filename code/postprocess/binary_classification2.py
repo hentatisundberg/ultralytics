@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import confusion_matrix
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
@@ -64,47 +65,107 @@ def train_classifier(dataset):
     X_train = ss_train.fit_transform(X_train)
 
     ss_test = StandardScaler()
-    X_tests = ss_test.fit_transform(X_test)
+    X_test = ss_test.fit_transform(X_test)
 
     # Train models
 
-    # SVM - linear 
-    clf_lin = SVC(kernel='linear').fit(X_train, y_train)
-    accuracy_score(y_test, clf_lin.predict(X_tests))
-
-    # SVM - nonlinear 
-    clf_nonlin = SVC(kernel='poly', degree=2, coef0=1).fit(X_train, y_train)
-    accuracy_score(y_test, clf_nonlin.predict(X_tests))
+    models = {}
 
     # Logistic Regression
-    logmodel = LogisticRegression()
-    
+    from sklearn.linear_model import LogisticRegression
+    models['Logistic Regression'] = LogisticRegression()
+
+    # Support Vector Machines
+    from sklearn.svm import LinearSVC
+    models['Support Vector Machines'] = LinearSVC()
+
+    # Decision Trees
+    from sklearn.tree import DecisionTreeClassifier
+    models['Decision Trees'] = DecisionTreeClassifier()
+
+    # Random Forest
+    from sklearn.ensemble import RandomForestClassifier
+    models['Random Forest'] = RandomForestClassifier()
+
+    # Naive Bayes
+    from sklearn.naive_bayes import GaussianNB
+    models['Naive Bayes'] = GaussianNB()
+
+    # K-Nearest Neighbors
+    from sklearn.neighbors import KNeighborsClassifier
+    models['K-Nearest Neighbor'] = KNeighborsClassifier()
+
+
+    from sklearn.metrics import accuracy_score, precision_score, recall_score
+
+    accuracy, precision, recall = {}, {}, {}
+    df_out = pd.DataFrame()
+
+    for key in models.keys():
+        
+        # Fit the classifier
+        models[key].fit(X_train, y_train)
+        
+        # Make predictions
+        predictions = models[key].predict(X_test)
+        df_out[key] = predictions
+
+        # Calculate metrics
+        accuracy[key] = accuracy_score(predictions, y_test)
+        precision[key] = precision_score(predictions, y_test)
+        recall[key] = recall_score(predictions, y_test)
+
+    temp = pd.merge(y_test, X_expl["track_id"], left_index = True, right_index = True, how = "left").reset_index()
+    df_out = pd.merge(temp, df_out, left_index = True, right_index = True)
+
+    # SVM - linear 
+    #clf_lin = SVC(kernel='linear').fit(X_train, y_train)
+    #accuracy_score(y_test, clf_lin.predict(X_tests))
+
+    # SVM - nonlinear 
+    #clf_nonlin = SVC(kernel='poly', degree=2, coef0=1).fit(X_train, y_train)
+    #accuracy_score(y_test, clf_nonlin.predict(X_tests))
+
+    # Logistic Regression
+    #logmodel = LogisticRegression()
+
     # fit the model with data
-    logmodel.fit(X_train,y_train)
+    #logmodel.fit(X_train,y_train)
     
     #predict the model
-    predictions_log=logmodel.predict(X_tests)
-    predictions_svc_lin=clf_lin.predict(X_tests)
-    predictions_svc_nonlin=clf_lin.predict(X_tests)
+    #predictions_log=logmodel.predict(X_tests)
+    #predictions_svc_lin=clf_lin.predict(X_tests)
+    #predictions_svc_nonlin=clf_lin.predict(X_tests)
+
+
+    df_model = pd.DataFrame(index=models.keys(), columns=['Accuracy', 'Precision', 'Recall'])
+    df_model['Accuracy'] = accuracy.values()
+    df_model['Precision'] = precision.values()
+    df_model['Recall'] = recall.values()
+
+    print(df_model)
+    print(df_out)
+    df_out.to_csv("inference/multimod_valid.csv")
+    #print(temp)
 
     # Caluclate accuracy
-    cm = confusion_matrix(y_test, predictions_svc_nonlin)
+    #cm = confusion_matrix(y_test, predictions_svc_nonlin)
 
-    TN, FP, FN, TP = confusion_matrix(y_test, predictions_svc_nonlin).ravel()
+    #TN, FP, FN, TP = confusion_matrix(y_test, predictions_svc_nonlin).ravel()
 
-    print('True Positive(TP)  = ', TP)
-    print('False Positive(FP) = ', FP)
-    print('True Negative(TN)  = ', TN)
-    print('False Negative(FN) = ', FN)
+    ##print('True Positive(TP)  = ', TP)
+    #print('False Positive(FP) = ', FP)
+    #print('True Negative(TN)  = ', TN)
+    #print('False Negative(FN) = ', FN)
 
     # Caluclate accuracy
-    accuracy =  (TP + TN) / (TP + FP + TN + FN)
+    #accuracy =  (TP + TN) / (TP + FP + TN + FN)
 
-    print('Accuracy of the binary classifier = {:0.3f}'.format(accuracy))
+    #print('Accuracy of the binary classifier = {:0.3f}'.format(accuracy))
 
     # Save model
     #pickle.dump(logmodel, open("models/LogisticBinClass3.sav", 'wb'))
-    pickle.dump(clf_nonlin, open("models/fishtrack_classifier.sav", 'wb'))
+    #pickle.dump(clf_nonlin, open("models/fishtrack_classifier.sav", 'wb'))
 
 
 def predict_from_classifier(model, dataset):
