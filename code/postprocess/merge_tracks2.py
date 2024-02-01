@@ -12,6 +12,7 @@ import sys
 import seaborn as sns
 import matplotlib.pyplot as plt
 import sqlite3
+from datetime import datetime 
 
 
 # Read tracks from bytetrack, botsort or similar
@@ -156,9 +157,68 @@ def merge_tracks(input_data):
     return outdata
 
 
-def associate_points(track_data, all_data):
+
+
+def associate_points_before(track_data, all_data):
+    print("ADDING POINTS BEFORE TRACKS")
     tracks = track_data["track_id"].unique().astype("int")
+    unassoc = all_data
+    unassoc = unassoc[unassoc["track_id"] == -1]
+    outdata = pd.DataFrame()
     
+    for track in tracks: 
+        track_temp = track_data[track_data["track_id"] == track]
+        minf, maxf = np.min(track_temp["frame"]), np.max(track_temp["frame"])
+        
+        # Points before 
+        cand_bef = unassoc.loc[(unassoc["frame"] < minf) & (unassoc["frame"] > minf-framedist)]
+
+        if len(cand_bef) > 0:
+            iterate = 1
+            while iterate == 1: 
+        
+                d1 = track_temp[["x", "y", "frame"]]
+                d2 = cand_bef[["x", "y", "frame"]]
+
+                d1s = d1.iloc[0:10]
+
+                d1s["frame"] = d1s["frame"]*time_scaling_assign
+                d2["frame"] = d2["frame"]*time_scaling_assign
+
+                # Min distance per point to track
+                dist = []
+
+                # Loop through each candidate point, recover its min distance 
+                points = range(0, len(d2))
+                for point in points: 
+                    p = np.array(d2.iloc[point].tolist())
+                    d = np.linalg.norm(p - np.array(d1s.values.tolist()), axis=1)
+                    dist.append(np.min(d))
+                    
+                nearest = np.min(dist)
+
+                if nearest < track_assign_thresh:
+                    minpos = cand_bef.loc[dist == nearest]
+                    minpos["track_id"] = track
+                    track_temp = pd.concat([track_temp, minpos]) # Update track data
+                    cand_bef.drop(minpos.index, inplace = True) # Delete from candidates
+                    nrow = len(track_temp) 
+                    if len(cand_bef) == 0:
+                        iterate = 0
+                        #outdata = pd.concat([outdata, track_temp])
+                    #print(f'Track {track} now includes {nrow} points')
+                else:
+                    iterate = 0
+        outdata = pd.concat([outdata, track_temp])
+    return outdata
+
+
+
+
+def associate_points_within(track_data, all_data):
+    print("ADDING POINTS WITHIN TRACKS")
+    start = datetime.now()
+    tracks = track_data["track_id"].unique().astype("int")
     unassoc = all_data
     unassoc = unassoc[unassoc["track_id"] == -1]
     outdata = pd.DataFrame()
@@ -167,22 +227,36 @@ def associate_points(track_data, all_data):
 
         track_temp = track_data[track_data["track_id"] == track]
         minf, maxf = np.min(track_temp["frame"]), np.max(track_temp["frame"])
-        candidates = unassoc.loc[(unassoc["frame"] > minf-framedist) & (unassoc["frame"] < maxf+framedist)]
+        
+        # Points within
 
-        if len(candidates) > 0:
-            iterate = 1 # Initiate loop 
-        else:
-            iterate = 0      
-        while iterate == 1: 
+        cand_within = unassoc.loc[(unassoc["frame"] > minf) & (unassoc["frame"] < maxf+framedist)]
+
+        ids = cand_within.index
+        n_it = int(np.ceil(len(ids)/chunksize))
+        #print(f'total number of chunks for track {track} = {n_it}')
+        res = []
     
-            d1 = track_temp[["x", "y", "frame"]]
-            d2 = candidates[["x", "y", "frame"]]
+        for i in list(range(0, n_it)):
+            for ele in range(chunksize):
+                res.append(i)
 
-            if len(d1) < size: 
+        res = res[0:len(ids)] # How to split dataset
+        df = pd.DataFrame(list(ids), columns = ["ids"])  # Index of unassociated point that will be checked
+        df["res"] = res
+        
+        for j in range(0, n_it): 
+            
+            #print(f'starting chunk = {j}')
+            current = df[df["res"] == j]["ids"]
+            d2 = cand_within[cand_within.index.isin(current)][["frame", "x", "y"]]
+            d1 = track_temp[["frame", "x", "y"]]
+
+            if len(track_temp) < size: 
                 ss1 = len(d1)
             else: 
                 ss1 = size
-
+            
             d1first = d1.iloc[0:1]
             d1last = d1.iloc[-1:]
             d1sample = d1.sample(ss1)
@@ -191,33 +265,39 @@ def associate_points(track_data, all_data):
             d1s["frame"] = d1s["frame"]*time_scaling_assign
             d2["frame"] = d2["frame"]*time_scaling_assign
 
-            # Min distance per point to track
-            dist = []
+            iterate = 1
+            while iterate == 1:
 
-            # Loop through each candidate point, recover its min distance 
-            points = range(0, len(d2))
-            for point in points: 
-                p = np.array(d2.iloc[point].tolist())
-                d = np.linalg.norm(p - np.array(d1s.values.tolist()), axis=1)
-                dist.append(np.min(d))
-                
-            #print(track)
-            #print(dist)
-            nearest = np.min(dist)
+                # Loop through each candidate point, recover its min distance 
 
-            if nearest < track_assign_thresh:
-                minpos = candidates.loc[dist == nearest]
-                minpos["track_id"] = track
-                track_temp = pd.concat([track_temp, minpos]) # Update track data
-                candidates.drop(minpos.index, inplace = True) # Delete from candidates
-                nrow = len(track_temp) 
-                if len(candidates) == 0:
+                dist = []
+                counter = 0                
+                for point in d2.index: 
+                    p = np.array(d2.iloc[counter].tolist())
+                    d = np.linalg.norm(p - np.array(d1s.values.tolist()), axis=1)
+                    dist.append(np.min(d))
+                    counter += 1
+
+                nearest = np.min(dist)
+                if nearest < track_assign_thresh:
+                    minpos = d2.loc[dist == nearest]
+                    minposx = cand_within[cand_within.index == minpos.index.to_list()[0]]
+                    minposx["track_id"] = track
+                    track_temp = pd.concat([track_temp, minposx]) # Update track data
+                    cand_within.drop(minposx.index, inplace = True) # Delete from candidates
+                    d2.drop(minpos.index, inplace = True) # Delete from candidates
+                    if len(d2) == 0:
+                        iterate = 0
+                else:
                     iterate = 0
-                    outdata = pd.concat([outdata, track_temp])
-                #print(f'Track {track} now includes {nrow} points')
-            else:
-                iterate = 0
-                outdata = pd.concat([outdata, track_temp])
+        outdata = pd.concat([outdata, track_temp])
+    nrows = len(outdata)
+    nrows0 = len(track_data)
+    end = datetime.now()
+    elapsed = end-start
+    print(f'input had {nrows0} rows')
+    print(f'output has {nrows} rows')
+    print(f'time elapsed: {elapsed}')
     return outdata
 
 
@@ -259,7 +339,7 @@ def calc_stats(input_data, orig_file):
         dur.append(i.total_seconds())    
     stats["dur_s"] = dur
 
-    xx = name.stem
+    xx = name["filename"][0]
 
     stats["file"] = xx
     
@@ -320,7 +400,7 @@ def insert_to_db(file):
     #file["file"] = file
     file = file.reset_index()
     file = file[file["nframes"] > 10]
-    con_local = create_connection("inference/Inference.db")
+    con_local = create_connection("inference/InferenceV2.db")
     file.to_sql("Inference", con_local, if_exists='append')
 
 def run_multiple(dir):
@@ -334,14 +414,15 @@ def run_multiple(dir):
         print(file_name)
         precheck = prep_data(orig_file)
         if len(precheck["track_id"].unique()) > 1:
-            output1 = merge_tracks(prep_data(orig_file))
+            output1 = merge_tracks(precheck)
             output2 = merge_tracks(output1)
             output3 = merge_tracks(output2)
             output4 = merge_tracks(output3)
             output5 = merge_tracks(output4)
-            output6 = associate_points(output5, prep_data(orig_file))
-            output7 = merge_tracks(output6)
-            ss = calc_stats(output7, orig_file)
+            output6 = associate_points_before(output5, precheck)
+            output7 = associate_points_within(output6, precheck)
+            output8 = merge_tracks(output7)
+            ss = calc_stats(output8, precheck)
             insert_to_db(ss)
             print(f'Finished with file {counter} of {nfiles}')
         counter += 1
@@ -351,30 +432,37 @@ def run_single(file):
     print(orig_file)
     precheck = prep_data(orig_file)
     if len(precheck["track_id"].unique()) > 1:
-        output1 = merge_tracks(prep_data(orig_file))
+        output1 = merge_tracks(precheck)
         output2 = merge_tracks(output1)
         output3 = merge_tracks(output2)
         output4 = merge_tracks(output3)
-        output5 = merge_tracks(output4)
-        output6 = associate_points(output5, prep_data(orig_file))
-        output7 = merge_tracks(output6)
-        ss = calc_stats(output7, orig_file)
-        #plot_tracks(output7, orig_file)
-        return(ss, output7)
+        output5 = merge_tracks(output4)        
+        output6 = associate_points_before(output5, precheck)
+        output7 = associate_points_within(output6, precheck)
+        output8 = merge_tracks(output7)
+        ss = calc_stats(output8, precheck)
+        plot_tracks(output8, orig_file)
+        return(output8)
+
 
 # Set params
 size = 30
 track_merge_thresh = 300
-track_assign_thresh = 100
+track_assign_thresh = 150
 time_scaling = .1
 time_scaling_assign = 1
 chunksize = 10
 framedist = 200
 
 # Run multiple
-multpath = "../../../../../mnt/BSP_NAS2_work/fish_model/inference"
+#multpath = "../../../../../mnt/BSP_NAS2_work/fish_model/inference"
+multpath = "inference/orig"
 run_multiple(multpath)
 
 
-# Run one 
-#output5 = run_single(file)
+# Run single 
+#file = "inference/orig/Auklab1_FAR3_2022-07-02_03.00.00.csv"
+#output8 = run_single(file)
+#all_data = pd.read_csv("inference/orig/Auklab1_FAR3_2022-06-16_04.00.00.csv")
+
+
