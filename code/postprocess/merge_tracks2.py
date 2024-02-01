@@ -169,7 +169,10 @@ def associate_points(track_data, all_data):
         minf, maxf = np.min(track_temp["frame"]), np.max(track_temp["frame"])
         candidates = unassoc.loc[(unassoc["frame"] > minf-framedist) & (unassoc["frame"] < maxf+framedist)]
 
-        iterate = 1 # Initiate loop       
+        if len(candidates) > 0:
+            iterate = 1 # Initiate loop 
+        else:
+            iterate = 0      
         while iterate == 1: 
     
             d1 = track_temp[["x", "y", "frame"]]
@@ -213,7 +216,6 @@ def associate_points(track_data, all_data):
                     outdata = pd.concat([outdata, track_temp])
                 #print(f'Track {track} now includes {nrow} points')
             else:
-                #print("No more tracks to merge")
                 iterate = 0
                 outdata = pd.concat([outdata, track_temp])
     return outdata
@@ -328,8 +330,8 @@ def run_multiple(dir):
     counter = 0
     for file in allfiles:
         orig_file = file
-        #file_name = file.stem
-        #print(file_name)
+        file_name = file.stem
+        print(file_name)
         precheck = prep_data(orig_file)
         if len(precheck["track_id"].unique()) > 1:
             output1 = merge_tracks(prep_data(orig_file))
@@ -357,7 +359,7 @@ def run_single(file):
         output6 = associate_points(output5, prep_data(orig_file))
         output7 = merge_tracks(output6)
         ss = calc_stats(output7, orig_file)
-        plot_tracks(output7, orig_file)
+        #plot_tracks(output7, orig_file)
         return(ss, output7)
 
 # Set params
@@ -371,8 +373,8 @@ framedist = 200
 
 # Run multiple
 multpath = "../../../../../mnt/BSP_NAS2_work/fish_model/inference"
-run_multiple("inference/orig")
+run_multiple(multpath)
+
 
 # Run one 
-#run_single("inference/orig/Auklab1_FAR3_2022-06-27_22.00.00.csv")
-
+#output5 = run_single(file)
