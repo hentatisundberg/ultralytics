@@ -200,9 +200,10 @@ def associate_points_before(track_data, all_data):
                 if nearest < track_assign_thresh:
                     minpos = cand_bef.loc[dist == nearest]
                     minpos["track_id"] = track
-                    track_temp = pd.concat([track_temp, minpos]) # Update track data
+                    track_temp = pd.concat([minpos, track_temp]) # Update track data
                     cand_bef.drop(minpos.index, inplace = True) # Delete from candidates
-                    nrow = len(track_temp) 
+                    #d1s = pd.concat([d1s, minpos[["x", "y", "frame"]]])
+                    track_temp = pd.concat([track_temp, minpos])
                     if len(cand_bef) == 0:
                         iterate = 0
                         #outdata = pd.concat([outdata, track_temp])
@@ -399,8 +400,8 @@ def insert_to_db(file):
     file = file 
     #file["file"] = file
     file = file.reset_index()
-    file = file[file["nframes"] > 10]
-    con_local = create_connection("inference/InferenceV2.db")
+    file = file[file["nframes"] > 5]
+    con_local = create_connection("inference/InferenceV3.db")
     file.to_sql("Inference", con_local, if_exists='append')
 
 def run_multiple(dir):
@@ -424,6 +425,7 @@ def run_multiple(dir):
             output8 = merge_tracks(output7)
             ss = calc_stats(output8, precheck)
             insert_to_db(ss)
+            output8.to_csv(f'inference/merged/{file_name}.csv')
             print(f'Finished with file {counter} of {nfiles}')
         counter += 1
 
