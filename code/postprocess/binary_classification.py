@@ -43,6 +43,19 @@ def plot_boundary(clf, X, Y):
     plt.scatter(X[:,0], X[:,1], c=Y, edgecolors='k')
 
 
+def prep_training_data(tracks, valid):
+    con = create_connection(tracks)
+    tracks = pd.read_sql_query(
+    """SELECT * FROM Inference""",
+    con)
+
+    # Prepare Valid data and merge with track data
+    valid = pd.read_csv(valid, sep = ";")
+    valid = pd.merge(valid, tracks, on = "track_id", how = "left")
+    valid = valid[valid['Ledge'].isin(["FAR3", "FAR6", "TRI3", "TRI6"])]
+    return(valid)
+
+
 def train_classifier(dataset):
 
     # Read annotation data
@@ -95,7 +108,6 @@ def train_classifier(dataset):
     from sklearn.neighbors import KNeighborsClassifier
     models['K-Nearest Neighbor'] = KNeighborsClassifier()
 
-
     from sklearn.metrics import accuracy_score, precision_score, recall_score
 
     accuracy, precision, recall = {}, {}, {}
@@ -118,33 +130,13 @@ def train_classifier(dataset):
     temp = pd.merge(y_test, X_expl["track_id"], left_index = True, right_index = True, how = "left").reset_index()
     df_out = pd.merge(temp, df_out, left_index = True, right_index = True)
 
-    # SVM - linear 
-    #clf_lin = SVC(kernel='linear').fit(X_train, y_train)
-    #accuracy_score(y_test, clf_lin.predict(X_tests))
-
-    # SVM - nonlinear 
-    #clf_nonlin = SVC(kernel='poly', degree=2, coef0=1).fit(X_train, y_train)
-    #accuracy_score(y_test, clf_nonlin.predict(X_tests))
-
-    # Logistic Regression
-    #logmodel = LogisticRegression()
-
-    # fit the model with data
-    #logmodel.fit(X_train,y_train)
-    
-    #predict the model
-    #predictions_log=logmodel.predict(X_tests)
-    #predictions_svc_lin=clf_lin.predict(X_tests)
-    #predictions_svc_nonlin=clf_lin.predict(X_tests)
-
-
     df_model = pd.DataFrame(index=models.keys(), columns=['Accuracy', 'Precision', 'Recall'])
     df_model['Accuracy'] = accuracy.values()
     df_model['Precision'] = precision.values()
     df_model['Recall'] = recall.values()
 
-    print(df_model)
-    print(df_out)
+    #print(df_model)
+    #print(df_out)
     df_out.to_csv("inference/multimod_valid.csv")
     
     # Save model
@@ -155,7 +147,11 @@ def predict_from_classifier(model, dataset):
     
     model = pickle.load(open(model, 'rb'))
 
-    dataset = dataset
+    con = create_connection(dataset)
+    dataset = pd.read_sql_query(
+    """SELECT * FROM Inference""",
+    con)
+    
     preddata = dataset[["nframes","x_first","x_std","x_last","y_first","y_std","y_last", "conf_min","conf_mean","conf_max","mindim_mean","mindim_std","maxdim_mean","maxdim_std","x_dist","y_dist","dur_s", "detect_dens"]]
 
     # Transform indata
@@ -167,44 +163,47 @@ def predict_from_classifier(model, dataset):
 
     # Combine with original data
     out = pd.merge(predictions_full, dataset, left_index = True, right_index = True)
-    valid = out[out["Pred"] == 1]
+    
+    out.to_csv("inference/Validated_fishtracks.csv")
+    return(out)
 
-    valid.to_csv("inference/Validated_fishtracks.csv")
 
+def plot_results(data, x, y, logx, logy):
 
-def plot_results(data, x, y):
+    fish = data[data["Pred"] == 1]
+    nofish = data[data["Pred"] != 1]
 
-    out = data
-    fish = out[out["Pred"] == 1]
-    nofish = out[out["Pred"] != 1]
+    if logx: 
+        x1 = np.log(fish[x])
+        x2 = np.log(nofish[x])
+    else: 
+        x1 = fish[x]
+        x2 = nofish[x]
+
+    if logy: 
+        y1 = np.log(fish[y])
+        y2 = np.log(nofish[y])
+    else: 
+        y1 = fish[y]
+        y2 = nofish[y]
 
     fig, ax = plt.subplots()
-    ax.scatter(fish[x], fish[y], c = "r", alpha = .3, label = "Fish")
-    ax.scatter(nofish[x], nofish[y], c = "b", alpha = .3, label = "No Fish")
+    ax.scatter(x1, y1, c = "r", alpha = .3, label = "Fish", s = 1)
+    ax.scatter(x2, y2, c = "b", alpha = .3, label = "No Fish", s = 1)
     ax.set_xlabel(x)
     ax.set_ylabel(y)
     plt.legend()
     plt.show()
 
 
-
-# Train
-# Read track data
-con = create_connection("inference/InferenceV3.db")
-tracks = pd.read_sql_query(
-    """SELECT * FROM Inference""",
-    con)
-
-# Read Valid data and merge with track data
-valid = pd.read_csv("inference/tracks_valid.csv", sep = ";")
-valid = pd.merge(valid, tracks, on = "track_id", how = "left")
-valid = valid[valid['Ledge'].isin(["FAR3", "FAR6", "TRI3", "TRI6"])]
+# Prep training data 
+valid = prep_training_data("inference/Inference_stats.db", "inference/tracks_valid.csv")
 
 # Train model 
 train_classifier(valid)
 
 # Predict 
-predict_from_classifier("models/RandomForests.sav", tracks)
+inf = predict_from_classifier("models/RandomForests.sav", "inference/Inference_stats.db")
 
 # Plot 
-# plot_results(out, "x_std", "y_std")
+plot_results(inf, "x_dist", "y_dist", True, True)
