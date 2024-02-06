@@ -28,15 +28,15 @@ def cut_vid(data_frame, vidpath, savepath):
 
     for ind in data_frame.index:
 
-        if ind > 650:
+        if ind > 0:
             file = data_frame.iloc[ind]
 
-            print(ind)
+            #print(ind)
             datefold = str(file["start"])[0:10]
             ledge = file["Ledge"]
             yr = str(file["start"])[0:4]
 
-            starttime = str(file["file"]).split("_")[3].replace(".", ":")
+            starttime = str(file["file"][:-4]).split("_")[3].replace(".", ":")
             startclip = file["start"]
             endclip = file["end"]
 
@@ -49,8 +49,10 @@ def cut_vid(data_frame, vidpath, savepath):
                 startsec = (file["start"]-starttimestamp)/np.timedelta64(1,'s')
                 endsec = (file["end"]-starttimestamp)/np.timedelta64(1,'s')
 
-                vid_rel_path = f"{vidpath}Video{yr}/{ledge}/{datefold}/"
-                full_path = vid_rel_path+file["file"]+".mp4"
+                #vid_rel_path = f"{vidpath}Video{yr}/{ledge}/{datefold}/"
+                vid_rel_path = f"{vidpath}/{datefold}/"
+                full_path = vid_rel_path+file["file"]
+                print(full_path)
 
                 if os.path.isfile(full_path):
 
@@ -68,7 +70,7 @@ def cut_vid(data_frame, vidpath, savepath):
 
 
 # Create connection
-con = create_connection("inference/Inference.db")
+con = create_connection("inference/InferenceV3.db")
 
 # Load data 
 sql = """
@@ -91,18 +93,6 @@ df = pd.read_sql_query(
 #report.save(filename='fish_tracks_dataprep', to='/inference')
 
 # Cut videos
-done = cut_vid(df, "../../../../../mnt/BSP_NAS2/Video/", "../../../../../mnt/BSP_NAS2_work/fish_model/clips1/")
+#done = cut_vid(df, "../../../../../mnt/BSP_NAS2/Video/", "../../../../../mnt/BSP_NAS2_work/fish_model/clips1/")
+done = cut_vid(df, "../../../../../../Volumes/JHS-SSD2", "../../../../../../Volumes/JHS-SSD2/clips/")
 
-
-# OLD
-#done1 = pd.Series(done)
-#done_df = pd.DataFrame(done1)
-#done_df["done"] = 1
-#done_df.columns = ["track_id", "done"]
-#df2 = pd.merge(df, done_df, on = "track_id", how = "left")
-#f2.to_excel("inference/tracks_annotate.xlsx")
-
-
-#ffmpeg_extract_subclip(full_path, startsec, endsec, targetname = filename_out)
-#vidpath = "../../../../../mnt/BSP_NAS2/Video/"
-#savepath = "../../../../../mnt/BSP_NAS2_work/fish_model/clips1/"

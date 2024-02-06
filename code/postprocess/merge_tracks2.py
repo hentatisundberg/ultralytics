@@ -380,9 +380,9 @@ def plot_tracks(track_data, all_data):
     #plt.close()
 
     # Plot tracks over time 
-    ax = sns.scatterplot(x= dat["time2"], y=dat["x"], hue = dat["track_id"].astype("int"), palette = palette)
-    ax = sns.lineplot(x= dat["time2"], y=dat["x"], hue = dat["track_id"].astype("int"), palette = palette)
-    ax = sns.scatterplot(x = all_data["time2"], y = all_data["x"], size = .1, color = "black", marker = "+")
+    ax = sns.scatterplot(x= dat["time2"], y=dat["y"], hue = dat["track_id"].astype("int"), palette = palette)
+    ax = sns.lineplot(x= dat["time2"], y=dat["y"], hue = dat["track_id"].astype("int"), palette = palette)
+    ax = sns.scatterplot(x = all_data["time2"], y = all_data["y"], size = .1, color = "black", marker = "+")
     ax.invert_yaxis()
     ax.grid(False)
     plt.show()
@@ -458,13 +458,13 @@ framedist = 200
 
 # Run multiple
 #multpath = "../../../../../mnt/BSP_NAS2_work/fish_model/inference"
-multpath = "inference/orig"
-run_multiple(multpath)
+#multpath = "inference/orig"
+#run_multiple(multpath)
 
 
 # Run single 
-#file = "inference/orig/Auklab1_FAR3_2022-07-02_03.00.00.csv"
-#output8 = run_single(file)
+file = "inference/orig/Auklab1_FAR3_2022-06-27_21.00.00.csv"
+output8 = run_single(file)
 #all_data = pd.read_csv("inference/orig/Auklab1_FAR3_2022-06-16_04.00.00.csv")
 
 

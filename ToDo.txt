@@ -1,8 +1,8 @@
 
 
-# point density (frames/dur) as calculated stats variable 
-
-
+Interesting track cases: 
+FAR3 200626 04:40 
+FAR3 200629 06:37
 
 # AUTO-find interesting clips
 1 detect + track

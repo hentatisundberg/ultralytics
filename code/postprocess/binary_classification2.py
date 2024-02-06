@@ -51,7 +51,7 @@ def train_classifier(dataset):
 
     # Define response and target
     X_expl = dataset[["track_id", "start", "end"]]
-    X = dataset[["nframes",	"x_first","x_std","x_last","y_first","y_std","y_last", "conf_min","conf_mean","conf_max","mindim_mean","mindim_std","maxdim_mean","maxdim_std","x_dist","y_dist","dur_s"]]
+    X = dataset[["nframes",	"x_first","x_std","x_last","y_first","y_std","y_last", "conf_min","conf_mean","conf_max","mindim_mean","mindim_std","maxdim_mean","maxdim_std","x_dist","y_dist","dur_s", "detect_dens"]]
     y = dataset['Valid']
 
     # Define data sets 
@@ -146,34 +146,17 @@ def train_classifier(dataset):
     print(df_model)
     print(df_out)
     df_out.to_csv("inference/multimod_valid.csv")
-    #print(temp)
-
-    # Caluclate accuracy
-    #cm = confusion_matrix(y_test, predictions_svc_nonlin)
-
-    #TN, FP, FN, TP = confusion_matrix(y_test, predictions_svc_nonlin).ravel()
-
-    ##print('True Positive(TP)  = ', TP)
-    #print('False Positive(FP) = ', FP)
-    #print('True Negative(TN)  = ', TN)
-    #print('False Negative(FN) = ', FN)
-
-    # Caluclate accuracy
-    #accuracy =  (TP + TN) / (TP + FP + TN + FN)
-
-    #print('Accuracy of the binary classifier = {:0.3f}'.format(accuracy))
-
+    
     # Save model
-    #pickle.dump(logmodel, open("models/LogisticBinClass3.sav", 'wb'))
-    #pickle.dump(clf_nonlin, open("models/fishtrack_classifier.sav", 'wb'))
-
+    pickle.dump(models['Random Forest'], open("models/RandomForests.sav", 'wb'))
+    
 
 def predict_from_classifier(model, dataset):
     
     model = pickle.load(open(model, 'rb'))
 
-    dataset = pd.read_csv(dataset, sep = ";", decimal = ",")
-    preddata = dataset[["nframes","x_first","x_std","x_last","y_first","y_std","y_last", "conf_min","conf_mean","conf_max","mindim_mean","mindim_std","maxdim_mean","maxdim_std","x_dist","y_dist","dur_s"]]
+    dataset = dataset
+    preddata = dataset[["nframes","x_first","x_std","x_last","y_first","y_std","y_last", "conf_min","conf_mean","conf_max","mindim_mean","mindim_std","maxdim_mean","maxdim_std","x_dist","y_dist","dur_s", "detect_dens"]]
 
     # Transform indata
     ss_pred = StandardScaler()
@@ -184,8 +167,9 @@ def predict_from_classifier(model, dataset):
 
     # Combine with original data
     out = pd.merge(predictions_full, dataset, left_index = True, right_index = True)
+    valid = out[out["Pred"] == 1]
 
-    return(out)
+    valid.to_csv("inference/Validated_fishtracks.csv")
 
 
 def plot_results(data, x, y):
@@ -206,7 +190,7 @@ def plot_results(data, x, y):
 
 # Train
 # Read track data
-con = create_connection("inference/Inference.db")
+con = create_connection("inference/InferenceV3.db")
 tracks = pd.read_sql_query(
     """SELECT * FROM Inference""",
     con)
@@ -220,7 +204,7 @@ valid = valid[valid['Ledge'].isin(["FAR3", "FAR6", "TRI3", "TRI6"])]
 train_classifier(valid)
 
 # Predict 
-out = predict_from_classifier("models/fishtrack_classifier.sav", "inference/tracks_annotate.csv")
+predict_from_classifier("models/RandomForests.sav", tracks)
 
 # Plot 
 # plot_results(out, "x_std", "y_std")
