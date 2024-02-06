@@ -360,6 +360,32 @@ def calc_stats(input_data, orig_file):
     print(printstats.sort_values(by = ["conf_mean"], ascending = False))
     return(stats)
 
+def modify_output(file):
+    stats = file.groupby(["track_id"]).agg({"time2": "min"})    
+    print(stats)
+    stats = stats.reset_index()
+    cols = ["track", 'start']
+    stats.columns = cols
+
+    xx = file["filename"].iloc[0]
+
+    stats["file"] = xx  
+    ledge = xx.split("_")[1]
+    dates = xx.split("_")[2].split("-")
+    dateval = dates[0][2:4]+dates[1]+dates[2]
+    time = xx.split("_")[3][0:2]
+    a = pd.Series(stats.index).astype("int").astype("str")
+    stats["file_id"] = ledge+dateval+time
+    b = stats["file_id"].reset_index()["file_id"]
+    stats["track_id"] = b+"-"+a
+    
+    out = file.merge(stats[["track", "track_id"]], left_on = "track_id", right_on = "track", how = "right")
+    out["date"] = out["time2"].dt.date
+    out = out[["track_id_y", "ledge", "date", "time2", "x", "y", "width", "height", "maxdim", "mindim", "xdiff", "ydiff"]]
+    cols = ["track_id", "ledge", "date", "time", "x", "y", "width", "height", "maxdim", "mindim", "xdiff", "ydiff"]
+    out.columns = cols
+    return(out)
+
 
 def plot_tracks(track_data, all_data):
     all_data = pd.read_csv(all_data)
@@ -396,13 +422,11 @@ def prep_data(input):
         output = input
     return output 
 
-def insert_to_db(file):
-    file = file 
-    #file["file"] = file
-    file = file.reset_index()
-    file = file[file["nframes"] > 5]
-    con_local = create_connection("inference/InferenceV3.db")
-    file.to_sql("Inference", con_local, if_exists='append')
+def insert_to_db(input, output): 
+    input = input.reset_index()
+    #file = file[file["nframes"] > 5]
+    con_local = create_connection(output)
+    input.to_sql("Inference", con_local, if_exists='append')
 
 def run_multiple(dir):
     dir = Path(dir)
@@ -424,8 +448,10 @@ def run_multiple(dir):
             output7 = associate_points_within(output6, precheck)
             output8 = merge_tracks(output7)
             ss = calc_stats(output8, precheck)
-            insert_to_db(ss)
-            output8.to_csv(f'inference/merged/{file_name}.csv')
+            #insert_to_db(ss, "inference/Inference_stats.db")
+            output9 = modify_output(output8)
+            insert_to_db(output9, "inference/Inference_raw.db")
+            #output8.to_csv(f'inference/merged/{file_name}.csv')
             print(f'Finished with file {counter} of {nfiles}')
         counter += 1
 
@@ -457,14 +483,19 @@ chunksize = 10
 framedist = 200
 
 # Run multiple
-#multpath = "../../../../../mnt/BSP_NAS2_work/fish_model/inference"
+multpath = "../../../../../mnt/BSP_NAS2_work/fish_model/inference"
 #multpath = "inference/orig"
-#run_multiple(multpath)
+run_multiple(multpath)
 
 
 # Run single 
-file = "inference/orig/Auklab1_FAR3_2022-06-27_21.00.00.csv"
-output8 = run_single(file)
+#file = "inference/orig/Auklab1_FAR3_2022-06-27_21.00.00.csv"
+#output8 = run_single(file)
 #all_data = pd.read_csv("inference/orig/Auklab1_FAR3_2022-06-16_04.00.00.csv")
+
+# Test
+#test = pd.read_csv("../../../../../mnt/BSP_NAS2_work/fish_model/inference_merged/Auklab1_BONDEN3_2022-06-15_04.00.00.csv")
+test2 = modify_output(test)
+
 
 
