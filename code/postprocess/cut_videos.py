@@ -49,8 +49,8 @@ def cut_vid(data_frame, vidpath, savepath):
                 startsec = (file["start"]-starttimestamp)/np.timedelta64(1,'s')
                 endsec = (file["end"]-starttimestamp)/np.timedelta64(1,'s')
 
-                #vid_rel_path = f"{vidpath}Video{yr}/{ledge}/{datefold}/"
-                vid_rel_path = f"{vidpath}/{datefold}/"
+                vid_rel_path = f"{vidpath}Video{yr}/{ledge}/{datefold}/"
+                #vid_rel_path = f"{vidpath}/{datefold}/"
                 full_path = vid_rel_path+file["file"]
                 print(full_path)
 
@@ -70,11 +70,11 @@ def cut_vid(data_frame, vidpath, savepath):
 
 
 # Create connection
-con = create_connection("inference/InferenceV3.db")
+con = create_connection("inference/Inference_stats.db")
 
 # Load data 
 sql = """
-    SELECT * FROM Inference 
+    SELECT * FROM Inference
     """
 
 df = pd.read_sql_query(
@@ -93,6 +93,6 @@ df = pd.read_sql_query(
 #report.save(filename='fish_tracks_dataprep', to='/inference')
 
 # Cut videos
-#done = cut_vid(df, "../../../../../mnt/BSP_NAS2/Video/", "../../../../../mnt/BSP_NAS2_work/fish_model/clips1/")
-done = cut_vid(df, "../../../../../../Volumes/JHS-SSD2", "../../../../../../Volumes/JHS-SSD2/clips/")
+done = cut_vid(df, "../../../../../mnt/BSP_NAS2/Video/", "../../../../../mnt/BSP_NAS2_work/fish_model/clips2/")
+#done = cut_vid(df, "../../../../../../Volumes/JHS-SSD2", "../../../../../../Volumes/JHS-SSD2/clips/")
 

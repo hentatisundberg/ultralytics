@@ -142,11 +142,21 @@ def train_classifier(dataset):
     
     # Save model
     pickle.dump(models['Random Forest'], open("models/RandomForests.sav", 'wb'))
-    
+    pickle.dump(models['K-Nearest Neighbor'], open("models/KNearest.sav", 'wb'))
+    pickle.dump(models['Naive Bayes'], open("models/NaiveBayes.sav", 'wb'))
+    pickle.dump(models['Decision Trees'], open("models/DecisionTrees.sav", 'wb'))
+    pickle.dump(models['Support Vector Machines'], open("models/SVM.sav", 'wb'))
+    pickle.dump(models['Logistic Regression'], open("models/LogisticRegression.sav", 'wb'))
 
-def predict_from_classifier(model, dataset):
     
-    model = pickle.load(open(model, 'rb'))
+def predict_from_classifier(dataset):
+    
+    RandFor = pickle.load(open("models/RandomForests.sav", 'rb'))
+    KNear = pickle.load(open("models/KNearest.sav", 'rb'))
+    NaiveBayes = pickle.load(open("models/NaiveBayes.sav", 'rb'))
+    DecisionTree = pickle.load(open("models/DecisionTrees.sav", 'rb'))
+    SVM = pickle.load(open("models/SVM.sav", 'rb'))
+    LogReg = pickle.load(open("models/LogisticRegression.sav", 'rb'))
 
     con = create_connection(dataset)
     dataset = pd.read_sql_query(
