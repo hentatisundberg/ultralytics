@@ -13,6 +13,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import sqlite3
 from datetime import datetime 
+import seaborn as sns
 
 
 # Read tracks from bytetrack, botsort or similar

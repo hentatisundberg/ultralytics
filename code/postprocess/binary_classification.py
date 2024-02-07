@@ -12,6 +12,7 @@ import pickle
 from pathlib import Path
 import numpy as np
 import sqlite3
+import seaborn as sns
 
 
 def create_connection(db_file):
@@ -204,6 +205,37 @@ train_classifier(valid)
 
 # Predict 
 inf = predict_from_classifier("models/RandomForests.sav", "inference/Inference_stats.db")
+
+# Map to raw detection data 
+con = create_connection("inference/Inference_raw.db")
+dataset = pd.read_sql_query(
+"""SELECT * FROM Inference WHERE date = '2023-06-17' AND ledge = 'FAR3'""",
+con)
+
+pred_raw = dataset.merge(inf[["track_id", "Pred"]], on = "track_id", how = "left")
+
+fish = pred_raw[pred_raw["Pred"] == 1]
+nofish = pred_raw[pred_raw["Pred"] != 1]
+
+trackids = list(fish["track_id"].unique())
+fish = fish[fish["track_id"].isin(trackids[0:9])]
+
+fig, ax = plt.subplots()
+ax.scatter(fish["x"], fish["y"], c = "r", alpha = .3, label = "Fish", s = 1)
+#ax.scatter(nofish["x"], nofish["y"], c = "b", alpha = .3, label = "No Fish", s = 1)
+ax.set_xlabel(x)
+ax.set_ylabel(y)
+ax.invert_yaxis()
+plt.legend()
+plt.show()
+
+
+palette = sns.color_palette("bright")
+sns.set(rc = {'axes.facecolor': 'white'})
+ax = sns.scatterplot(x= fish["x"], y=fish["y"], hue = fish["track_id"], palette = palette)
+plt.show()
+
+
 
 # Plot 
 plot_results(inf, "x_dist", "y_dist", True, True)
