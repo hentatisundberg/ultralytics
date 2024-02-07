@@ -170,12 +170,19 @@ def predict_from_classifier(dataset):
     preddata_transform = ss_pred.fit_transform(preddata)
 
     # Make predictions 
-    predictions_full=pd.Series(model.predict(preddata_transform), name = "Pred")
+    pred_randfor=pd.Series(RandFor.predict(preddata_transform), name = "RandFor")
+    pred_knear=pd.Series(KNear.predict(preddata_transform), name = "KNear")
+    pred_naive=pd.Series(NaiveBayes.predict(preddata_transform), name = "NaBayes")
+    pred_dectree=pd.Series(DecisionTree.predict(preddata_transform), name = "DecTree")
+    pred_svm=pd.Series(SVM.predict(preddata_transform), name = "SVM")
+    pred_logreg=pd.Series(LogReg.predict(preddata_transform), name = "LogReg")
+
+    preds = pd.concat([pred_randfor, pred_knear, pred_naive, pred_dectree, pred_svm, pred_logreg], axis = 1)
 
     # Combine with original data
-    out = pd.merge(predictions_full, dataset, left_index = True, right_index = True)
+    out = pd.merge(preds, dataset, left_index = True, right_index = True)
     
-    out.to_csv("inference/Validated_fishtracks.csv")
+    out.to_csv("inference/Predicted_fishtracks.csv")
     return(out)
 
 
