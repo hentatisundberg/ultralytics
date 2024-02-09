@@ -61,11 +61,11 @@ def cut_vid(row, vidpath, savepath):
                 endsec,
                 targetname = filename_out
             )
-            print(filename_out)
+            #print(filename_out)
             return(filename_out)
     
 
-def annotate_vid(vid, model):
+def annotate_vid(vid, model, device):
 
     # Pick out relevant video information
     results = model(vid, 
@@ -73,7 +73,8 @@ def annotate_vid(vid, model):
                     stream=True,  
                     save = True,
                     show = False, 
-                    save_frames = False)
+                    save_frames = False, 
+                    device = device)
     for result in results: 
         result.boxes
 
@@ -82,7 +83,7 @@ def compress_vid(input, outputdir):
     file = Path(input)
     name = file.name
     output = outputdir+name
-    print(output)
+    #print(output)
 
     cap = cv2.VideoCapture(input)
 
@@ -112,11 +113,11 @@ def compress_vid(input, outputdir):
     out.release()
     cv2.destroyAllWindows()
 
-def cleanup(folder):
-    shutil.rmtree(f"runs/detect/{folder}/{Path(vid).stem}_frames") # Remove frames
-    os.remove(f"runs/detect/{folder}/{Path(vid).stem}.avi") # Remove video from Larus 
+def cleanup(folder, vid):
+    #shutil.rmtree(f"runs/detect/{folder}/{Path(vid).stem}_frames") # Remove frames
+    #os.remove(f"runs/detect/{folder}/{Path(vid).stem}.avi") # Remove video from Larus 
     shutil.rmtree(f"runs/detect/{folder}") # Remove folder
-    os.remove(f"../../../../../mnt/BSP_NAS2_work/fish_model/t0/{Path(vid).name}") # Remove video from Larus 
+    os.remove(f"../../../../../mnt/BSP_NAS2_work/fish_model/t01/{Path(vid).name}") # Remove video from Larus 
 
 
 def df_from_db(db, scale, minframes, maxframes):
@@ -140,19 +141,26 @@ def df_from_db(db, scale, minframes, maxframes):
     return(df)
 
 
-def main(ledge, minframes, maxframes):
+def main(ledge, minframes, maxframes, device):
 
     df = df_from_db("inference/Inference_stats_nomerge.db", ledge, minframes, maxframes)
     folder = "predict2"
 
     for row in df.index:
         input = df.iloc[row]
-        vid = cut_vid(input, "../../../../../mnt/BSP_NAS2/Video/", "../../../../../mnt/BSP_NAS2_work/fish_model/t0/")
-        annotate_vid(vid, YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt"))
-        compress_vid(f"runs/detect/{folder}/{Path(vid).stem}.avi", "../../../../../../mnt/BSP_NAS2_work/fish_model/clips_annot4/")
-        cleanup(folder)
-        print("Unknown error")
+        print(f'starting with {input.file}')
+        vid = cut_vid(input, "../../../../../mnt/BSP_NAS2/Video/", "../../../../../mnt/BSP_NAS2_work/fish_model/t01/") 
+        print("cut finished")
+        annotate_vid(vid, YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt"), device)
+        print("annotation finished")
+        compress_vid(f"runs/detect/{folder}/{Path(vid).stem}.avi", "../../../../../../mnt/BSP_NAS2_work/fish_model/clips_annot5/")
+        print("compression finished")
+        cleanup(folder, vid)
+        print("cleanup finished")
 
+
+
+#df = df_from_db("inference/Inference_stats_nomerge.db", "FAR3", 2, 20)
 
 # RUN 
-main("FAR3", 0, 20)
+main("FAR3", 2, 20, 0)
