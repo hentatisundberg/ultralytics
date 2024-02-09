@@ -1,8 +1,3 @@
-import pandas as pd
-from pathlib import Path 
-from ultralytics import YOLO
-import sys
-
 
 # Video compression using os
 
@@ -45,36 +40,4 @@ def compress_videos(input, outputdir):
     cv2.destroyAllWindows()
 
 
-# Detection models and trackers 
-tracker = "ultralytics/cfg/trackers/bytetrack.yaml"
-tracker_name = tracker.split("/")[-1].split(".")[0]
-model = YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt")
-
-# Work folders
-input_dir = Path("../../../../../../mnt/BSP_NAS2_work/fish_model/clips3")
-#temp_save_dir = Path("../../../../../../mnt/BSP_NAS2_work/fish_model/clips_temp") 
-save_dir = Path("../../../../../../mnt/BSP_NAS2_work/fish_model/clips_annot2")
-
-
-vids = list(input_dir.glob("*.mp4"))
-
-
-# CUT IN THE SAME SCRIPT!
-
-
-for vid in vids: 
-
-    # Pick out relevant video information
-    results = model(vid, 
-                    conf = 0.1,
-                    stream=True,  
-                    save = True,
-                    show = False, 
-                    save_frames = False)
-    for result in results: 
-        result.boxes
-
-
-    
-
-
+compress_videos("vids/orig/BONDEN322062208-3.avi", "vids/compressed/")

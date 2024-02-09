@@ -390,7 +390,7 @@ def modify_output(file):
 
 def plot_tracks(track_data, all_data):
     all_data = pd.read_csv(all_data)
-    dat = track_data
+    dat = track_data[track_data["track_id"] != -1]
     dat["time2"] = pd.to_datetime(dat["time"]*1000*1000*1000)
     all_data["time2"] = pd.to_datetime(all_data["time"]*1000*1000*1000)
 
@@ -407,8 +407,8 @@ def plot_tracks(track_data, all_data):
     #plt.close()
 
     # Plot tracks over time 
-    ax = sns.scatterplot(x= dat["time2"], y=dat["y"], hue = dat["track_id"].astype("int"), palette = palette)
-    ax = sns.lineplot(x= dat["time2"], y=dat["y"], hue = dat["track_id"].astype("int"), palette = palette)
+    ax = sns.scatterplot(x= dat["time2"], y=dat["y"], color = "red", size = dat["conf"], palette = palette)
+    #ax = sns.lineplot(x= dat["time2"], y=dat["y"], color = "red", palette = palette)
     ax = sns.scatterplot(x = all_data["time2"], y = all_data["y"], size = .1, color = "black", marker = "+")
     ax.invert_yaxis()
     ax.grid(False)
@@ -462,16 +462,17 @@ def run_single(file):
     precheck = prep_data(orig_file)
     if len(precheck["track_id"].unique()) > 1:
         output1 = merge_tracks(precheck)
-        output2 = merge_tracks(output1)
-        output3 = merge_tracks(output2)
-        output4 = merge_tracks(output3)
-        output5 = merge_tracks(output4)        
-        output6 = associate_points_before(output5, precheck)
-        output7 = associate_points_within(output6, precheck)
-        output8 = merge_tracks(output7)
-        ss = calc_stats(output8, precheck)
-        plot_tracks(output8, orig_file)
-        return(output8)
+        #output2 = merge_tracks(output1)
+        #output3 = merge_tracks(output2)
+        #output4 = merge_tracks(output3)
+        #output5 = merge_tracks(output4)        
+        output6 = associate_points_before(precheck, precheck)
+        #output7 = associate_points_within(output6, precheck)
+        #output8 = merge_tracks(output7)
+        ss = calc_stats(output6, precheck)
+        ss.to_csv(f'inference/test/{orig_file.name}', sep = ";", decimal = ",")
+        plot_tracks(output6, orig_file)
+        return(output6)
 
 
 # Set params
@@ -484,19 +485,19 @@ chunksize = 10
 framedist = 200
 
 # Run multiple
-multpath = "../../../../../mnt/BSP_NAS2_work/fish_model/inference"
+#multpath = "../../../../../mnt/BSP_NAS2_work/fish_model/inference"
 #multpath = "inference/orig"
-run_multiple(multpath)
+#run_multiple(multpath)
 
 
 # Run single 
-#file = "inference/orig/Auklab1_FAR3_2022-06-27_21.00.00.csv"
-#output8 = run_single(file)
+file = "inference/orig/Auklab1_FAR3_2022-06-28_16.00.00.csv"
+output8 = run_single(file)
 #all_data = pd.read_csv("inference/orig/Auklab1_FAR3_2022-06-16_04.00.00.csv")
 
 # Test
 #test = pd.read_csv("../../../../../mnt/BSP_NAS2_work/fish_model/inference_merged/Auklab1_BONDEN3_2022-06-15_04.00.00.csv")
-test2 = modify_output(test)
+#test2 = modify_output(test)
 
 
 

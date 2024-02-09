@@ -136,7 +136,7 @@ def train_classifier(dataset):
     df_model['Precision'] = precision.values()
     df_model['Recall'] = recall.values()
 
-    #print(df_model)
+    print(df_model)
     #print(df_out)
     df_out.to_csv("inference/multimod_valid.csv")
     
@@ -178,18 +178,20 @@ def predict_from_classifier(dataset):
     pred_logreg=pd.Series(LogReg.predict(preddata_transform), name = "LogReg")
 
     preds = pd.concat([pred_randfor, pred_knear, pred_naive, pred_dectree, pred_svm, pred_logreg], axis = 1)
+    preds["multi"] = preds["RandFor"]+preds["KNear"]+preds["NaBayes"]+preds["DecTree"]+preds["SVM"]+preds["LogReg"]
+    preds["fish"] = np.where(preds["multi"] == 6, 1, 0)
 
     # Combine with original data
     out = pd.merge(preds, dataset, left_index = True, right_index = True)
     
-    out.to_csv("inference/Predicted_fishtracks.csv")
+    out.to_csv("inference/Predicted_fishtracks.csv", sep = ";", decimal = ".")
     return(out)
 
 
 def plot_results(data, x, y, logx, logy):
 
-    fish = data[data["Pred"] == 1]
-    nofish = data[data["Pred"] != 1]
+    fish = data[data["fish"] == 1]
+    nofish = data[data["fish"] != 1]
 
     if logx: 
         x1 = np.log(fish[x])
@@ -214,6 +216,39 @@ def plot_results(data, x, y, logx, logy):
     plt.show()
 
 
+def plot_orig_data(date, ledge):
+
+    con = create_connection("inference/Inference_raw.db")
+    dataset = pd.read_sql_query(
+    """SELECT * FROM Inference WHERE date = date AND ledge = ledge""",
+    con)
+
+    pred_raw = dataset.merge(inf[["track_id", "fish"]], on = "track_id", how = "left")
+
+    fish = pred_raw[pred_raw["fish"] == 1]
+    nofish = pred_raw[pred_raw["fish"] != 1]
+
+    trackids = list(fish["track_id"].unique())
+    fish = fish[fish["track_id"].isin(trackids[0:9])]
+
+    # Plot 1
+    fig, ax = plt.subplots()
+    ax.scatter(fish["x"], fish["y"], c = "r", alpha = .3, label = "Fish", s = 1)
+    #ax.scatter(nofish["x"], nofish["y"], c = "b", alpha = .3, label = "No Fish", s = 1)
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.invert_yaxis()
+    plt.legend()
+    plt.show()
+
+    # Plot 2
+    palette = sns.color_palette("bright")
+    sns.set(rc = {'axes.facecolor': 'white'})
+    ax = sns.lineplot(x= fish["x"], y=fish["y"], hue = fish["track_id"], palette = palette, sort = False)
+    ax.invert_yaxis()
+    plt.show()
+
+
 # Prep training data 
 valid = prep_training_data("inference/Inference_stats.db", "inference/tracks_valid.csv")
 
@@ -221,38 +256,12 @@ valid = prep_training_data("inference/Inference_stats.db", "inference/tracks_val
 train_classifier(valid)
 
 # Predict 
-inf = predict_from_classifier("models/RandomForests.sav", "inference/Inference_stats.db")
+inf = predict_from_classifier("inference/Inference_stats.db")
 
-# Map to raw detection data 
-con = create_connection("inference/Inference_raw.db")
-dataset = pd.read_sql_query(
-"""SELECT * FROM Inference WHERE date = '2023-06-17' AND ledge = 'FAR3'""",
-con)
-
-pred_raw = dataset.merge(inf[["track_id", "Pred"]], on = "track_id", how = "left")
-
-fish = pred_raw[pred_raw["Pred"] == 1]
-nofish = pred_raw[pred_raw["Pred"] != 1]
-
-trackids = list(fish["track_id"].unique())
-fish = fish[fish["track_id"].isin(trackids[0:9])]
-
-fig, ax = plt.subplots()
-ax.scatter(fish["x"], fish["y"], c = "r", alpha = .3, label = "Fish", s = 1)
-#ax.scatter(nofish["x"], nofish["y"], c = "b", alpha = .3, label = "No Fish", s = 1)
-ax.set_xlabel(x)
-ax.set_ylabel(y)
-ax.invert_yaxis()
-plt.legend()
-plt.show()
-
-
-palette = sns.color_palette("bright")
-sns.set(rc = {'axes.facecolor': 'white'})
-ax = sns.scatterplot(x= fish["x"], y=fish["y"], hue = fish["track_id"], palette = palette)
-plt.show()
-
+# Plot 
+plot_orig_data("2022-06-22", "TRI3")
 
 
 # Plot 
-plot_results(inf, "x_dist", "y_dist", True, True)
+#plot_results(inf, "x_dist", "y_dist", True, True)
+

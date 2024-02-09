@@ -1,8 +1,70 @@
 
+# Make sure correct sql subset from db
+
+# Gränsvärde första klassificering 50%?
+
+
+# Low precision = Many false positives  
+# Low recall = Many false negatives  
+# Imnportant to maximize precision!
+
+
+V2
+                         Accuracy  Precision    Recall
+Logistic Regression      0.911111   0.785714  0.916667
+Support Vector Machines  0.911111   0.857143  0.857143
+Decision Trees           0.866667   0.857143  0.750000
+Random Forest            0.955556   0.857143  1.000000
+Naive Bayes              0.911111   0.785714  0.916667
+K-Nearest Neighbor       0.955556   0.928571  0.928571
+
+
+V3
+                         Accuracy  Precision    Recall
+Logistic Regression      0.907407   0.928571  0.764706
+Support Vector Machines  0.777778   0.857143  0.545455
+Decision Trees           0.833333   0.785714  0.647059
+Random Forest            0.925926   0.857143  0.857143
+Naive Bayes              0.925926   0.928571  0.812500
+K-Nearest Neighbor       0.907407   0.785714  0.846154
+
+V4
+
+
+
+
+
 
 Interesting track cases: 
 FAR3 200626 04:40 
 FAR3 200629 06:37
+
+FAR3 220627 21
+FAR3 220619 14
+FAR3 230624 16
+FAR3 220628 16
+FAR3 220615 02
+FAR3 220618 19
+FAR3 230624 03
+FAR3 230624 22
+FAR3 230624 04
+FAR3 230626 06
+FAR3 230626 09
+
+FAR3 220618 08
+FAR3 230624 04
+FAR3 230623 10
+FAR3 230625 05
+FAR3 230624 04
+FAR3 230624 03
+FAR3 230623 05
+FAR3 230615 04
+FAR3 230626 09
+FAR3 230624 04
+FAR3 230623 06
+FAR3 230623 18
+FAR3 230625 06
+
 
 # AUTO-find interesting clips
 1 detect + track
