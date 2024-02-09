@@ -34,9 +34,9 @@ def compress_vids(input, outputdir):
         if ret==True:
             out.write(frame)
 
-            cv2.imshow('frame',frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+            #cv2.imshow('frame',frame)
+            #if cv2.waitKey(1) & 0xFF == ord('q'):
+            #    break
         else:
             break
 
