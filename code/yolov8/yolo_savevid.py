@@ -7,6 +7,7 @@ import os
 from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 import sqlite3
 import numpy as np
+import sys
 
 # Functions
 
@@ -153,8 +154,9 @@ def main(ledge, minframes, maxframes, device):
         print("cut finished")
         annotate_vid(vid, YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt"), device)
         print("annotation finished")
-        compress_vid(f"runs/detect/{folder}/{Path(vid).stem}.avi", "../../../../../../mnt/BSP_NAS2_work/fish_model/clips_annot5/")
-        print("compression finished")
+        if os.path.isfile(f"runs/detect/{folder}/{Path(vid).stem}.avi"):
+            compress_vid(f"runs/detect/{folder}/{Path(vid).stem}.avi", "../../../../../../mnt/BSP_NAS2_work/fish_model/clips_annot5/")
+            print("compression finished")
         cleanup(folder, vid)
         print("cleanup finished")
 
@@ -163,4 +165,6 @@ def main(ledge, minframes, maxframes, device):
 #df = df_from_db("inference/Inference_stats_nomerge.db", "FAR3", 2, 20)
 
 # RUN 
-main("FAR3", 2, 20, 0)
+#main("FAR3", 2, 20, 0)
+main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+
