@@ -1,19 +1,18 @@
 import pandas as pd
 from pathlib import Path 
 from ultralytics import YOLO
-import sys
-
+import shutil
 
 # Video compression using os
 
 import cv2
 from pathlib import Path
 
-def compress_videos(input, outputdir):
+def compress_vids(input, outputdir):
 
     file = Path(input)
     name = file.name
-    output = outputdir+name
+    output = outputdir.joinpath(name)
     print(output)
 
     cap = cv2.VideoCapture(input)
@@ -25,6 +24,8 @@ def compress_videos(input, outputdir):
     fourcc = cv2.VideoWriter_fourcc(*'H264')  # Change this to your desired codec
     frame_size = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
     frame_rate = int(cap.get(cv2.CAP_PROP_FPS))
+    print(frame_size)
+    print(frame_rate)
 
     out = cv2.VideoWriter(output, fourcc, frame_rate, frame_size, isColor=True)
 
@@ -61,20 +62,22 @@ vids = list(input_dir.glob("*.mp4"))
 
 # CUT IN THE SAME SCRIPT!
 
+def annotate_vids(vids):
 
-for vid in vids: 
+    for vid in vids: 
 
-    # Pick out relevant video information
-    results = model(vid, 
-                    conf = 0.1,
-                    stream=True,  
-                    save = True,
-                    show = False, 
-                    save_frames = False)
-    for result in results: 
-        result.boxes
+        # Pick out relevant video information
+        results = model(vid, 
+                        conf = 0.1,
+                        stream=True,  
+                        save = True,
+                        show = False, 
+                        save_frames = False)
+        for result in results: 
+            result.boxes
+        shutil.rmtree(f"runs/detect/predict13/{vid.stem}_frames") # Remove frames
+        compress_vids(f"runs/detect/predict13/{vid.stem}.avi", Path("../../../../../../mnt/BSP_NAS2_work/fish_model/clips_annot2/"))
 
 
-    
 
-
+compress_vids(f"runs/detect/predict13/BONDEN322061505-3.avi", Path("runs/detect/predict/"))
