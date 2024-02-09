@@ -12,7 +12,7 @@ def compress_vids(input, outputdir):
 
     file = Path(input)
     name = file.name
-    output = outputdir.joinpath(name)
+    output = outputdir+name
     print(output)
 
     cap = cv2.VideoCapture(input)
@@ -49,7 +49,7 @@ def compress_vids(input, outputdir):
 # Detection models and trackers 
 tracker = "ultralytics/cfg/trackers/bytetrack.yaml"
 tracker_name = tracker.split("/")[-1].split(".")[0]
-model = YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt")
+#model = YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt")
 
 # Work folders
 input_dir = Path("../../../../../../mnt/BSP_NAS2_work/fish_model/clips3")
@@ -80,4 +80,5 @@ def annotate_vids(vids):
 
 
 
-compress_vids(f"runs/detect/predict13/BONDEN322061505-3.avi", Path("runs/detect/predict/"))
+#compress_vids(f"runs/detect/predict13/BONDEN322061505-3.avi", Path("runs/detect/predict/"))
+compress_vids(f"vids/orig/BONDEN322062105-4.avi", "vids/compressed/")
