@@ -31,18 +31,6 @@ def create_connection(db_file):
     return conn
 
 
-def plot_boundary(clf, X, Y):
-    h = 0.02
-    x_min, x_max = X[:,0].min() - 10*h, X[:,0].max() + 10*h
-    y_min, y_max = X[:,1].min() - 10*h, X[:,1].max() + 10*h
-    xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
-    Z = clf.predict(np.c_[xx.ravel(), yy.ravel()])
-    Z = Z.reshape(xx.shape)
-    plt.figure(figsize=(5,5))
-    plt.contourf(xx, yy, Z, alpha=0.25)
-    plt.contour(xx, yy, Z, colors='k', linewidths=0.7)
-    plt.scatter(X[:,0], X[:,1], c=Y, edgecolors='k')
-
 
 def prep_training_data(tracks, valid):
     con = create_connection(tracks)
@@ -52,8 +40,13 @@ def prep_training_data(tracks, valid):
 
     # Prepare Valid data and merge with track data
     valid = pd.read_csv(valid, sep = ";")
-    valid = pd.merge(valid, tracks, on = "track_id", how = "left")
+    valid = pd.merge(valid, tracks, on = "track", how = "left")
     valid = valid[valid['Ledge'].isin(["FAR3", "FAR6", "TRI3", "TRI6"])]
+    
+    # Remove tracks with one detection and only include annotated tracks 
+    valid = valid[valid["nframes"] > 1] 
+    valid = valid[valid["Valid"] > -1]
+
     return(valid)
 
 
@@ -64,7 +57,7 @@ def train_classifier(dataset):
     #dataset = dataset[~dataset["Valid"].isna()]
 
     # Define response and target
-    X_expl = dataset[["track_id", "start", "end"]]
+    X_expl = dataset[["track", "start", "end"]]
     X = dataset[["nframes",	"x_first","x_std","x_last","y_first","y_std","y_last", "conf_min","conf_mean","conf_max","mindim_mean","mindim_std","maxdim_mean","maxdim_std","x_dist","y_dist","dur_s", "detect_dens"]]
     y = dataset['Valid']
 
@@ -128,7 +121,7 @@ def train_classifier(dataset):
         precision[key] = precision_score(predictions, y_test)
         recall[key] = recall_score(predictions, y_test)
 
-    temp = pd.merge(y_test, X_expl["track_id"], left_index = True, right_index = True, how = "left").reset_index()
+    temp = pd.merge(y_test, X_expl["track"], left_index = True, right_index = True, how = "left").reset_index()
     df_out = pd.merge(temp, df_out, left_index = True, right_index = True)
 
     df_model = pd.DataFrame(index=models.keys(), columns=['Accuracy', 'Precision', 'Recall'])
@@ -138,30 +131,35 @@ def train_classifier(dataset):
 
     print(df_model)
     #print(df_out)
-    df_out.to_csv("inference/multimod_valid.csv")
+    df_out.to_csv("inference/multimod_valid_nomerge.csv", sep = ";", decimal = ",")
     
     # Save model
-    pickle.dump(models['Random Forest'], open("models/RandomForests.sav", 'wb'))
-    pickle.dump(models['K-Nearest Neighbor'], open("models/KNearest.sav", 'wb'))
-    pickle.dump(models['Naive Bayes'], open("models/NaiveBayes.sav", 'wb'))
-    pickle.dump(models['Decision Trees'], open("models/DecisionTrees.sav", 'wb'))
-    pickle.dump(models['Support Vector Machines'], open("models/SVM.sav", 'wb'))
-    pickle.dump(models['Logistic Regression'], open("models/LogisticRegression.sav", 'wb'))
+    pickle.dump(models['Random Forest'], open("models/unmerged_tracks/RandomForests.sav", 'wb'))
+    pickle.dump(models['K-Nearest Neighbor'], open("models/unmerged_tracks/KNearest.sav", 'wb'))
+    pickle.dump(models['Naive Bayes'], open("models/unmerged_tracks/NaiveBayes.sav", 'wb'))
+    pickle.dump(models['Decision Trees'], open("models/unmerged_tracks/DecisionTrees.sav", 'wb'))
+    pickle.dump(models['Support Vector Machines'], open("models/unmerged_tracks/SVM.sav", 'wb'))
+    pickle.dump(models['Logistic Regression'], open("models/unmerged_tracks/LogisticRegression.sav", 'wb'))
 
     
 def predict_from_classifier(dataset):
     
-    RandFor = pickle.load(open("models/RandomForests.sav", 'rb'))
-    KNear = pickle.load(open("models/KNearest.sav", 'rb'))
-    NaiveBayes = pickle.load(open("models/NaiveBayes.sav", 'rb'))
-    DecisionTree = pickle.load(open("models/DecisionTrees.sav", 'rb'))
-    SVM = pickle.load(open("models/SVM.sav", 'rb'))
-    LogReg = pickle.load(open("models/LogisticRegression.sav", 'rb'))
+    RandFor = pickle.load(open("models/unmerged_tracks/RandomForests.sav", 'rb'))
+    KNear = pickle.load(open("models/unmerged_tracks/KNearest.sav", 'rb'))
+    NaiveBayes = pickle.load(open("models/unmerged_tracks/NaiveBayes.sav", 'rb'))
+    DecisionTree = pickle.load(open("models/unmerged_tracks/DecisionTrees.sav", 'rb'))
+    SVM = pickle.load(open("models/unmerged_tracks/SVM.sav", 'rb'))
+    LogReg = pickle.load(open("models/unmerged_tracks/LogisticRegression.sav", 'rb'))
 
     con = create_connection(dataset)
+    cond1 = f'nframes > 1'
+    
+    sql = (f'SELECT * FROM Inference '
+            f'WHERE {cond1};')
+    
     dataset = pd.read_sql_query(
-    """SELECT * FROM Inference""",
-    con)
+        sql, 
+        con)
     
     preddata = dataset[["nframes","x_first","x_std","x_last","y_first","y_std","y_last", "conf_min","conf_mean","conf_max","mindim_mean","mindim_std","maxdim_mean","maxdim_std","x_dist","y_dist","dur_s", "detect_dens"]]
 
@@ -184,8 +182,39 @@ def predict_from_classifier(dataset):
     # Combine with original data
     out = pd.merge(preds, dataset, left_index = True, right_index = True)
     
-    out.to_csv("inference/Predicted_fishtracks.csv", sep = ";", decimal = ".")
+    out.to_csv("inference/Predicted_fishtracks_unmerged.csv", sep = ";", decimal = ",")
     return(out)
+
+
+
+
+def plot_annotations(data, x, y, logx, logy):
+
+    fish = data[data["Valid"] == 1]
+    nofish = data[data["Valid"] == 0]
+
+    if logx: 
+        x1 = np.log(fish[x])
+        x2 = np.log(nofish[x])
+    else: 
+        x1 = fish[x]
+        x2 = nofish[x]
+
+    if logy: 
+        y1 = np.log(fish[y])
+        y2 = np.log(nofish[y])
+    else: 
+        y1 = fish[y]
+        y2 = nofish[y]
+
+    fig, ax = plt.subplots()
+    ax.scatter(x1, y1, c = "r", alpha = .3, label = "Fish", s = 10)
+    ax.scatter(x2, y2, c = "b", alpha = .3, label = "No Fish", s = 10)
+    ax.set_xlabel(x)
+    ax.set_ylabel(y)
+    plt.legend()
+    plt.show()
+
 
 
 def plot_results(data, x, y, logx, logy):
@@ -218,18 +247,28 @@ def plot_results(data, x, y, logx, logy):
 
 def plot_orig_data(date, ledge):
 
-    con = create_connection("inference/Inference_raw.db")
-    dataset = pd.read_sql_query(
-    """SELECT * FROM Inference WHERE date = date AND ledge = ledge""",
-    con)
+    con = create_connection("inference/Inference_raw_nomerge.db")
+    
+    cond1 = f'ledge = "{ledge}"'
 
-    pred_raw = dataset.merge(inf[["track_id", "fish"]], on = "track_id", how = "left")
+    sql = (f'SELECT * '
+           f'FROM Inference '
+           f'WHERE {cond1};')
+
+    dataset = pd.read_sql_query(
+        sql,
+        con)
+
+    dataset["time2"] = pd.to_datetime(dataset["time2"])
+    dataset["date"] = dataset["time2"].dt.date
+    dataset = dataset[dataset["date"] == date]
+    pred_raw = dataset.merge(inf[["track", "fish"]], on = "track", how = "left")
 
     fish = pred_raw[pred_raw["fish"] == 1]
     nofish = pred_raw[pred_raw["fish"] != 1]
 
-    trackids = list(fish["track_id"].unique())
-    fish = fish[fish["track_id"].isin(trackids[0:9])]
+    trackids = list(fish["track"].unique())
+    fish = fish[fish["track"].isin(trackids[0:9])]
 
     # Plot 1
     fig, ax = plt.subplots()
@@ -244,23 +283,28 @@ def plot_orig_data(date, ledge):
     # Plot 2
     palette = sns.color_palette("bright")
     sns.set(rc = {'axes.facecolor': 'white'})
-    ax = sns.lineplot(x= fish["x"], y=fish["y"], hue = fish["track_id"], palette = palette, sort = False)
+    ax = sns.lineplot(x= fish["x"], y=fish["y"], hue = fish["track"], palette = palette, sort = False)
     ax.invert_yaxis()
     plt.show()
 
+    return(dataset)
+
+
 
 # Prep training data 
-valid = prep_training_data("inference/Inference_stats.db", "inference/tracks_valid.csv")
+valid = prep_training_data("inference/Inference_stats_nomerge.db", "data/unmerged_valid.csv")
 
 # Train model 
 train_classifier(valid)
 
 # Predict 
-inf = predict_from_classifier("inference/Inference_stats.db")
+inf = predict_from_classifier("inference/Inference_stats_nomerge.db")
 
 # Plot 
-plot_orig_data("2022-06-22", "TRI3")
+#dataset = plot_orig_data("2022-06-22", "FAR3")
 
+# Plot annotations
+plot_annotations(valid, "nframes", "conf_mean", False, False)
 
 # Plot 
 #plot_results(inf, "x_dist", "y_dist", True, True)
