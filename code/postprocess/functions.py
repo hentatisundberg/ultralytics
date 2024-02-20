@@ -60,7 +60,7 @@ def create_connection(db_file):
 def merge_tracks(input_data, size, chunksize, track_merge_thresh, time_scaling):
 
     dat = input_data
-    dat = dat[dat["nofish"] == 0]
+    dat = dat[dat["multi"] > 0]
     ids = dat["track"].unique()
     ninp = len(ids)
     print(f'number of input tracks = {ninp}')
@@ -105,8 +105,8 @@ def merge_tracks(input_data, size, chunksize, track_merge_thresh, time_scaling):
 
                 for i in range(0, ncombs):
 
-                    d1 = dx[dx["track"] == comblist.iloc[i][0]][["x", "y", "frame"]]
-                    d2 = dx[dx["track"] == comblist.iloc[i][1]][["x", "y", "frame"]]
+                    d1 = dx[dx["track"] == comblist.iloc[i][0]][["x", "y", "time"]]
+                    d2 = dx[dx["track"] == comblist.iloc[i][1]][["x", "y", "time"]]
                     
                     if len(d1) < size: 
                         ss1 = len(d1)
@@ -130,8 +130,8 @@ def merge_tracks(input_data, size, chunksize, track_merge_thresh, time_scaling):
                     d1s = pd.concat([d1first, d1sample, d1last])
                     d2s = pd.concat([d2first, d2sample, d2last])
 
-                    d1s["frame"] = d1s["frame"]*time_scaling
-                    d2s["frame"] = d2s["frame"]*time_scaling
+                    d1s["time"] = d1s["time"]*time_scaling
+                    d2s["time"] = d2s["time"]*time_scaling
 
                     d1l = d1s.values.tolist()
                     d2l = d2s.values.tolist()
@@ -315,24 +315,10 @@ def associate_points_within(track_data, all_data):
     return outdata
 
 
-def calc_stats(input_data, orig_file): 
-    name = orig_file
+def calc_stats2(input_data): 
     dat = input_data
-    dat["time2"] = pd.to_datetime(dat["time"]*1000*1000*1000)
-    dat["width"] = abs(dat["x"]-dat["w"])
-    dat["height"] = abs(dat["y"]-dat["h"])
-    maxdim = []
-    mindim = []
-    for i in range(0, len(dat)):
-        maxdim.append(max(dat.iloc[i]["width"], dat.iloc[i]["height"]))
-        mindim.append(min(dat.iloc[i]["width"], dat.iloc[i]["height"]))
-    dat["maxdim"] = maxdim
-    dat["mindim"] = mindim
-
-    dat["xdiff"] = dat["x"].diff().abs()
-    dat["ydiff"] = dat["y"].diff().abs()
-
-    stats = dat.groupby(["track_id"]).agg({"time2": ["min", "max"], 
+    dat["time2"] = pd.to_datetime(dat["time2"])
+    stats = dat.groupby(["track"]).agg({"time2": ["min", "max"], 
                                             "frame": "count", 
                                             "x": ["first", "std", "last"],
                                             "y": ["first", "std", "last"], 
@@ -352,24 +338,9 @@ def calc_stats(input_data, orig_file):
     for i in timeelapse:
         dur.append(i.total_seconds())    
     stats["dur_s"] = dur
-
-    xx = name["filename"][0]
-
-    stats["file"] = xx
-    
-    ledge = xx.split("_")[1]
-    dates = xx.split("_")[2].split("-")
-    dateval = dates[0][2:4]+dates[1]+dates[2]
-    time = xx.split("_")[3][0:2]
-    a = pd.Series(stats.index).astype("int").astype("str")
-    stats["file_id"] = ledge+dateval+time
-    b = stats["file_id"].reset_index()["file_id"]
-    stats["track_id"] = b+"-"+a
-
-    stats["Ledge"] = ledge    
     stats["detect_dens"] = stats["nframes"]/stats["dur_s"]
 
-    printstats = stats[["track_id", "start", "end", "nframes", "conf_mean", "x_dist", "y_dist", "dur_s"]]
+    printstats = stats[["track", "start", "end", "nframes", "conf_mean", "x_dist", "y_dist", "dur_s"]]
     print(printstats.sort_values(by = ["conf_mean"], ascending = False))
     return(stats)
 
@@ -432,17 +403,28 @@ def plot_tracks(track_data, all_data):
 def plot_tracks2(track_data):
     
     # General plotting features
-    fig, ax = plt.subplots()
+    fig, axs = plt.subplots(2)
     tracks = track_data["track"].unique()
+    track_data["time2"] = pd.to_datetime(track_data["time2"])
+    date = track_data.iloc[0]["time2"].date()
+    ledge = track_data.iloc[0]["ledge"]
 
     # Plot tracks in space 
     for track in tracks: 
         data = track_data[track_data["track"] == track]        
-        col = np.where(data["nofish"] == 1, "lightgrey", "darkred")[0]
-        ax.plot(data["x"], data["y"], c = col)
-        ax.invert_yaxis()
-        ax.grid(False)
+        col = np.random.rand(3,)
+        axs[0].plot(data["x"], data["y"], c = col)
+        axs[0].grid(False)
+        axs[0].text(data.iloc[0]["x"], data.iloc[0]["y"], data.iloc[0]["track"], fontsize = 'xx-small', c = col)
+        axs[0].invert_yaxis()
         
+        axs[1].plot(data["time2"], data["y"], c = col)
+        axs[1].scatter(data["time2"], data["y"], c = "black", s = 10, marker = "|", alpha = .5)
+        axs[1].grid(False)
+        axs[1].text(data.iloc[0]["time2"], data.iloc[0]["y"], data.iloc[0]["track"], fontsize = 'xx-small')
+        axs[1].invert_yaxis()
+
+    fig.suptitle(f'{date}, {ledge}')
     plt.show()
     
 
