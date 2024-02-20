@@ -109,7 +109,7 @@ def insert_to_db(input_file, output_raw, output_stats):
         stats.to_sql("Inference", con_stats, if_exists='append')
 
 
-allfiles = list(Path("inference/orig/").glob("*FAR3*"))
+allfiles = list(Path("../../../../../../mnt/BSP_NAS2_work/fish_model/inference/").glob("*TRI3*"))
 
 for file in allfiles:
     insert_to_db(file, "inference/Inference_raw_nomerge.db", "inference/Inference_stats_nomerge.db")
