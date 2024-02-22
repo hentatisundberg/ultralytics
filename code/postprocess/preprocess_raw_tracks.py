@@ -19,11 +19,12 @@ path = Path("inference/orig/")
 files = list(path.glob("*.csv"))
 for file in files: 
     df = pd.read_csv(file)
-    if len(df) > 0: 
+    df_track = df[df["track_id"] != -1]
+    if len(df_track) > 0: 
         print(file)
         assigned = associate_points_before(df, 1, 200, 20)
         assigned = modify_input(assigned)
-        stats = calc_stats2(assigned, "track_id")
+        stats = calc_stats2(assigned, "track")
         insert_to_db(assigned, "inference/Inference_raw_nomergeV2.db")
         insert_to_db(stats, "inference/Inference_stats_nomergeV2.db")
 

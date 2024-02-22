@@ -80,16 +80,19 @@ def compress_annotate_vid(file, savepath):
 
 
 # Read databases  
-df_raw = df_from_db("inference/Inference_raw_nomergeV2.db", f'ledge == "FAR3"', f'strftime("%Y-%m-%d", time2) != "XYZ"', False)
-df_stats = df_from_db("inference/Inference_stats_nomergeV2.db", f'nframes > 0', f'strftime("%Y-%m-%d", start) != "XYZ"', True)
+#df_raw = df_from_db("inference/Inference_raw_nomergeV2.db", f'ledge == "FAR3"', f'strftime("%Y-%m-%d", time2) != "XYZ"', False)
+#df_stats = df_from_db("inference/Inference_stats_nomergeV2.db", f'nframes > 0', f'strftime("%Y-%m-%d", start) != "XYZ"', True)
+
+
+# Test
 
 
 # Cut vid
-for row in df_stats.index:
-    input = df_stats.iloc[row]
-    print(f'starting with {input.track}')
-    vid = cut_vid(input, "../../../../../../Volumes/JHS-SSD2/full_vid/", "../../../../../../Volumes/JHS-SSD2/cut_vid/", "track") 
-    print("cut finished")
+#for row in df_stats.index:
+#    input = df_stats.iloc[row]
+#    print(f'starting with {input.track}')
+#    vid = cut_vid(input, "../../../../../../Volumes/JHS-SSD2/full_vid/", "../../../../../../Volumes/JHS-SSD2/cut_vid/", "track") 
+#    print("cut finished")
     
 # Compress and annotate
 #allfiles = list(Path("../../../../../../Volumes/JHS-SSD2/cut_vid/").glob("*.mp4"))

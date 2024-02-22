@@ -4,6 +4,67 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
+
+
+def plot_tracks(track_data, all_data):
+    all_data = pd.read_csv(all_data)
+    dat = track_data[track_data["track_id"] != -1]
+    dat["time2"] = pd.to_datetime(dat["time"]*1000*1000*1000)
+    all_data["time2"] = pd.to_datetime(all_data["time"]*1000*1000*1000)
+
+    # General plotting features
+    palette = sns.color_palette("bright")
+    sns.set(rc = {'axes.facecolor': 'white'})
+    
+    # Plot new tracks in space 
+    #ax = sns.scatterplot(x= dat["x"], y=dat["y"], hue = dat["track_id"].astype("int"), palette = palette)
+    #ax.invert_yaxis()
+    #ax.grid(False)
+    #plt.show()
+    #plt.savefig("temp/"+"tracks_space_"+file_name+"orig.jpg")
+    #plt.close()
+
+    # Plot tracks over time 
+    ax = sns.scatterplot(x= dat["time2"], y=dat["y"], color = "red", size = dat["conf"], palette = palette)
+    #ax = sns.lineplot(x= dat["time2"], y=dat["y"], color = "red", palette = palette)
+    ax = sns.scatterplot(x = all_data["time2"], y = all_data["y"], size = .1, color = "black", marker = "+")
+    ax.invert_yaxis()
+    ax.grid(False)
+    plt.show()
+    #plt.savefig("temp/"+"tracks_time_"+file_name+".jpg")
+    #plt.close()
+
+
+def plot_tracks2(track_data):
+    
+    # General plotting features
+    fig, axs = plt.subplots(2)
+    tracks = track_data["track"].unique()
+    track_data["time2"] = pd.to_datetime(track_data["time2"])
+    date = track_data.iloc[0]["time2"].date()
+    ledge = track_data.iloc[0]["ledge"]
+
+    # Plot tracks in space 
+    for track in tracks: 
+        data = track_data[track_data["track"] == track]        
+        col = np.random.rand(3,)
+        axs[0].plot(data["x"], data["y"], c = col)
+        axs[0].grid(False)
+        axs[0].text(data.iloc[0]["x"], data.iloc[0]["y"], data.iloc[0]["track"], fontsize = 'xx-small', c = col)
+        axs[0].invert_yaxis()
+        
+        axs[1].plot(data["time2"], data["y"], c = col)
+        axs[1].scatter(data["time2"], data["y"], c = "black", s = 10, marker = "|", alpha = .5)
+        axs[1].grid(False)
+        axs[1].text(data.iloc[0]["time2"], data.iloc[0]["y"], data.iloc[0]["track"], fontsize = 'xx-small')
+        axs[1].invert_yaxis()
+
+    fig.suptitle(f'{date}, {ledge}')
+    plt.show()
+    
+    
+
+
 def plot_all_from_db():
     date = "2022-06-27"
     dat = df_from_db("inference/Inference_raw_nomerge.db", f'ledge == "FAR3"',  f'strftime("%Y-%m-%d", time2) == "{date}"', False)
