@@ -5,21 +5,7 @@ import numpy as np
 import os
 #from dataprep.eda import create_report
 from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
-
-def create_connection(db_file):
-    """ create a database connection to the SQLite database
-        specified by db_file
-    :param db_file: database file
-    :return: Connection object or None
-    """
-    conn = None
-    try:
-        conn = sqlite3.connect(db_file)
-        return conn
-    except sqlite3.Error as e:
-        print(e)
-
-    return conn
+from functions import create_connection
 
 
 def cut_vid(data_frame, vidpath, savepath): 

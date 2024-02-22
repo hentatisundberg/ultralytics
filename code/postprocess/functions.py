@@ -315,6 +315,43 @@ def associate_points_within(track_data, all_data):
     return outdata
 
 
+
+
+def cut_vid(row, vidpath, savepath, trackname): 
+
+    datefold = str(row["start"])[0:10]
+
+    starttime_vid = row["start"].floor("H")
+    startclip = row["start"]
+    endclip = row["end"]
+    starttime_name = starttime_vid.strftime("%Y-%m-%d_%H.%M.%S")
+
+    if any(pd.isnull([startclip, endclip, starttime_vid])):
+        print("skip")
+
+    else: 
+        startsec = (row["start"]-starttime_vid)/np.timedelta64(1,'s')
+        endsec = (row["end"]-starttime_vid)/np.timedelta64(1,'s')
+
+        ledge = row[trackname].split("_")[0]
+        vid_rel_path = f"{vidpath}{datefold}/"
+        full_path = f'{vid_rel_path}Auklab1_{ledge}_{starttime_name}.mp4'
+        print(full_path)
+
+        if os.path.isfile(full_path):
+            tracknamex = row[trackname]
+            filename_out = f"{savepath}{tracknamex}.mp4"
+            ffmpeg_extract_subclip(
+                full_path,
+                startsec,
+                endsec,
+                targetname = filename_out
+            )
+            #print(filename_out)
+            return(filename_out)
+
+
+
 def calc_stats2(input_data, trackname): 
     dat = input_data
     dat["time2"] = pd.to_datetime(dat["time2"])

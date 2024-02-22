@@ -9,41 +9,8 @@ from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 import sqlite3
 import numpy as np
 import sys
-from functions import create_connection, df_from_db
+from functions import create_connection, df_from_db, cut_vid
 
-
-def cut_vid(row, vidpath, savepath): 
-
-    datefold = str(row["start"])[0:10]
-
-    starttime_vid = row["start"].floor("H")
-    startclip = row["start"]
-    endclip = row["end"]
-    starttime_name = starttime_vid.strftime("%Y-%m-%d_%H.%M.%S")
-
-    if any(pd.isnull([startclip, endclip, starttime_vid])):
-        print("skip")
-
-    else: 
-        startsec = (row["start"]-starttime_vid)/np.timedelta64(1,'s')
-        endsec = (row["end"]-starttime_vid)/np.timedelta64(1,'s')
-
-        ledge = row["track"].split("_")[0]
-        vid_rel_path = f"{vidpath}{datefold}/"
-        full_path = f'{vid_rel_path}Auklab1_{ledge}_{starttime_name}.mp4'
-        print(full_path)
-
-        if os.path.isfile(full_path):
-            trackname = row['track']
-            filename_out = f"{savepath}{trackname}.mp4"
-            ffmpeg_extract_subclip(
-                full_path,
-                startsec,
-                endsec,
-                targetname = filename_out
-            )
-            #print(filename_out)
-            return(filename_out)
 
 
 def compress_annotate_vid(file, savepath):
@@ -113,27 +80,28 @@ def compress_annotate_vid(file, savepath):
 
 
 # Read databases  
-df_raw = df_from_db("inference/Inference_raw_merge.db", f'ledge == "FAR3"', f'strftime("%Y-%m-%d", time2) != "XYZ"', False)
-df_stats = df_from_db("inference/Inference_stats_merge.db", f'nframes > 0', f'strftime("%Y-%m-%d", start) != "XYZ"', True)
+df_raw = df_from_db("inference/Inference_raw_nomergeV2.db", f'ledge == "FAR3"', f'strftime("%Y-%m-%d", time2) != "XYZ"', False)
+df_stats = df_from_db("inference/Inference_stats_nomergeV2.db", f'nframes > 0', f'strftime("%Y-%m-%d", start) != "XYZ"', True)
+
 
 # Cut vid
-#for row in df_stats.index:
-#    input = df_stats.iloc[row]
-#    print(f'starting with {input.track}')
-#    vid = cut_vid(input, "../../../../../../Volumes/JHS-SSD2/full_vid/", "../../../../../../Volumes/JHS-SSD2/cut_vid/") 
-#    print("cut finished")
+for row in df_stats.index:
+    input = df_stats.iloc[row]
+    print(f'starting with {input.track}')
+    vid = cut_vid(input, "../../../../../../Volumes/JHS-SSD2/full_vid/", "../../../../../../Volumes/JHS-SSD2/cut_vid/", "track") 
+    print("cut finished")
     
 # Compress and annotate
-allfiles = list(Path("../../../../../../Volumes/JHS-SSD2/cut_vid/").glob("*.mp4"))
-for file in allfiles[200:]:
-    print(f'processing {file} ...')
-    compress_annotate_vid(file, "../../../../../../Volumes/JHS-SSD2/annot_merge/")
-    #print("compression and annotation finished")
+#allfiles = list(Path("../../../../../../Volumes/JHS-SSD2/cut_vid/").glob("*.mp4"))
+#for file in allfiles[200:]:
+#    print(f'processing {file} ...')
+#    compress_annotate_vid(file, "../../../../../../Volumes/JHS-SSD2/annot_merge/")
+#    #print("compression and annotation finished")
 
 
-track = file.stem
-pp = df_raw[df_raw["track"] == track][["track", "x", "y", "width", "height"]].reset_index()
-pp.iloc[0]["x"]
+#track = file.stem
+#pp = df_raw[df_raw["track"] == track][["track", "x", "y", "width", "height"]].reset_index()
+#pp.iloc[0]["x"]
 
 # Define input path
 #path = Path("../../../../../../Volumes/JHS-SSD2/clips_unmerged/clips_annot5/")
