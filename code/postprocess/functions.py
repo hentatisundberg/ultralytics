@@ -172,11 +172,11 @@ def merge_tracks(input_data, size, chunksize, track_merge_thresh, time_scaling):
 
 
 
-def associate_points_before(track_data, all_data):
+def associate_points_before(detection_data, time_scaling_assign, track_assign_thresh, framedist):
     print("ADDING POINTS BEFORE TRACKS")
-    tracks = track_data["track_id"].unique().astype("int")
-    unassoc = all_data
-    unassoc = unassoc[unassoc["track_id"] == -1]
+    tracks = detection_data["track_id"].unique().astype("int")
+    track_data = detection_data[detection_data["track_id"] != -1]
+    unassoc = detection_data[detection_data["track_id"] == -1]
     outdata = pd.DataFrame()
     
     for track in tracks: 
@@ -315,10 +315,10 @@ def associate_points_within(track_data, all_data):
     return outdata
 
 
-def calc_stats2(input_data): 
+def calc_stats2(input_data, trackname): 
     dat = input_data
     dat["time2"] = pd.to_datetime(dat["time2"])
-    stats = dat.groupby(["track"]).agg({"time2": ["min", "max"], 
+    stats = dat.groupby([trackname]).agg({"time2": ["min", "max"], 
                                             "frame": "count", 
                                             "x": ["first", "std", "last"],
                                             "y": ["first", "std", "last"], 
@@ -340,8 +340,8 @@ def calc_stats2(input_data):
     stats["dur_s"] = dur
     stats["detect_dens"] = stats["nframes"]/stats["dur_s"]
 
-    printstats = stats[["track", "start", "end", "nframes", "conf_mean", "x_dist", "y_dist", "dur_s"]]
-    print(printstats.sort_values(by = ["conf_mean"], ascending = False))
+    #printstats = stats[["track", "start", "end", "nframes", "conf_mean", "x_dist", "y_dist", "dur_s"]]
+    #print(printstats.sort_values(by = ["conf_mean"], ascending = False))
     return(stats)
 
 def modify_output(file):
@@ -442,19 +442,25 @@ def insert_to_db(input, output):
     input.to_sql("Inference", con_local, if_exists='append')
 
     
-def df_from_db(db, cond1, cond2):
+def df_from_db(db, cond1, cond2, stats):
     con = create_connection(db)
 
     sql = (f'SELECT * '
            f'FROM Inference '
            f'WHERE {cond1} AND {cond2};')
    
-    df = pd.read_sql_query(
+    if stats: 
+        df = pd.read_sql_query(
+            sql,
+            con, 
+            parse_dates = {"start": "%Y-%m-%d %H:%M:%S.%f", "end": "%Y-%m-%d %H:%M:%S.%f"}
+            )
+    else: 
+        df = pd.read_sql_query(
         sql,
         con, 
-        parse_dates = {"start": "%Y-%m-%d %H:%M:%S.%f", "end": "%Y-%m-%d %H:%M:%S.%f"}
+        parse_dates = {"time2": "%Y-%m-%d %H:%M:%S.%f"}
         )
-    
     return(df)
 
 def predict_from_classifier(dataset):
@@ -500,6 +506,24 @@ def predict_from_classifier(dataset):
     preds.to_csv("inference/Unmerged_nofish.csv", sep = ";", decimal = ",")
     return(preds)
 
+
+# Modify input
+
+def modify_input(dat):
+    dat["time2"] = pd.to_datetime(dat["time"]*1000*1000*1000)
+    dat["width"] = abs(dat["x"]-dat["w"])
+    dat["height"] = abs(dat["y"]-dat["h"])
+    maxdim = []
+    mindim = []
+    for i in range(0, len(dat)):
+        maxdim.append(max(dat.iloc[i]["width"], dat.iloc[i]["height"]))
+        mindim.append(min(dat.iloc[i]["width"], dat.iloc[i]["height"]))
+    dat["maxdim"] = maxdim
+    dat["mindim"] = mindim
+    dat["xdiff"] = dat["x"].diff().abs()
+    dat["ydiff"] = dat["y"].diff().abs()
+
+    return(dat)
 
 
 # Run functions

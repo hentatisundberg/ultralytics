@@ -13,22 +13,7 @@ from pathlib import Path
 import numpy as np
 import sqlite3
 import seaborn as sns
-
-
-def create_connection(db_file):
-    """ create a database connection to the SQLite database
-        specified by db_file
-    :param db_file: database file
-    :return: Connection object or None
-    """
-    conn = None
-    try:
-        conn = sqlite3.connect(db_file)
-        return conn
-    except sqlite3.Error as e:
-        print(e)
-
-    return conn
+from functions import create_connection
 
 
 
@@ -292,7 +277,7 @@ def plot_orig_data(date, ledge):
 
 
 # Prep training data 
-valid = prep_training_data("inference/Inference_stats_nomerge.db", "data/unmerged_valid.csv")
+valid = prep_training_data("inference/Inference_stats_nomerge.db", "data/fish_track_unmerged_annotations.csv")
 
 # Train model 
 train_classifier(valid)

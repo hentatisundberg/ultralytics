@@ -81,7 +81,6 @@ def compress_vid(input, outputdir):
     cv2.destroyAllWindows()
 
 
-
 def main(ledge, minframes, maxframes):
     
     df = df_from_db("inference/Inference_stats_merge1.db", ledge, minframes, maxframes)
@@ -89,10 +88,10 @@ def main(ledge, minframes, maxframes):
     for row in df.index:
         input = df.iloc[row]
         print(f'starting with {input.file}')
-        vid = cut_vid(input, "../../Volumes/BSP_NAS2/Video/", "../../../../../mnt/BSP_NAS2_work/fish_model/t01/") 
+        vid = cut_vid(input, "../../../../../../Volumes/JHS-SSD2/full_vid/", "../../../../../../Volumes/JHS-SSD2/cut_vid/") 
         print("cut finished")
-        compress_vid(f"runs/detect/{folder}/{Path(vid).stem}.avi", "../../../../../../mnt/BSP_NAS2_work/fish_model/clips_annot5/")
-        print("compression finished")
+        compress_vid("../../../../../../Volumes/JHS-SSD2/cut_vid/", "../../../../../../Volumes/JHS-SSD2/annot_merge/")
+        print("compression and annotation finished")
 
 
 #df = df_from_db("inference/Inference_stats_nomerge.db", "FAR3", 2, 20)
