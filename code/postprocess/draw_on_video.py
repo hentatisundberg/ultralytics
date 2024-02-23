@@ -5,7 +5,6 @@ from ultralytics import YOLO
 import shutil
 import cv2
 import os
-from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 import sqlite3
 import numpy as np
 import sys
@@ -21,70 +20,70 @@ def compress_annotate_vid(file, savepath):
         track = file.stem
         output = savepath+name
 
-        cap = cv2.VideoCapture(str(file))
-
-        if not cap.isOpened():
-            print("Error: Could not open the input video file")
-            exit()
-        # XVID better than MJPG. DIVX = XVID
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Change this to your desired codec
-        frame_size = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
-        frame_rate = int(cap.get(cv2.CAP_PROP_FPS))
-        font = cv2.FONT_HERSHEY_SIMPLEX 
-
-        out = cv2.VideoWriter(output, fourcc, frame_rate, frame_size, isColor=True)
         plotdata = df_raw[df_raw["track"] == track][["track", "x", "y", "width", "height"]].reset_index()
+        ndetections = len(plotdata)
+        print(f'number of detections is {ndetections}')
 
-        count = 0
-        while(cap.isOpened()):
-            ret, frame = cap.read()
-            if ret==True:
-                
-                # Filename
-                if count > (len(plotdata)-5):
-                    count = 0
-                #print(count)
-                cv2.putText(frame, f'{name}',  
-                    (50, 150),  
-                    font, 3,  
-                    (255, 255, 255),  
-                    3,  
-                    cv2.LINE_4) 
-                
-                #for row in range(len(plotdata)-1):
-                    #print(row)
-                    #print(row+1)
-                x1 = int(plotdata.iloc[count]["x"]+(.5*plotdata.iloc[count]["width"]))
-                y1 = int(plotdata.iloc[count]["y"]+(.5*plotdata.iloc[count]["height"]))                   
-                x2 = int(plotdata.iloc[(count+1)]["x"]+(.5*plotdata.iloc[(count+1)]["width"]))
-                y2 = int(plotdata.iloc[(count+1)]["y"]+(.5*plotdata.iloc[(count+1)]["height"]))                   
-                
-                startpoint = (x1, y1)
-                endpoint = (x2, y2)
-                #print(startpoint)
-        #        print(endpoint)
-                frame = cv2.circle(frame, (x1, y1), 100, (255, 255, 255), 1)
-                #frame = cv2.line(frame, startpoint, endpoint, (255, 255, 255), 20)                   
+        if ndetections > 3:
+        
+            cap = cv2.VideoCapture(str(file))
 
-                out.write(frame)
-                count += 1
-            else:
-                break
+            if not cap.isOpened():
+                print("Error: Could not open the input video file")
+                exit()
+            # XVID better than MJPG. DIVX = XVID
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Change this to your desired codec
+            frame_size = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+            frame_rate = int(cap.get(cv2.CAP_PROP_FPS))
+            font = cv2.FONT_HERSHEY_SIMPLEX 
+
+            out = cv2.VideoWriter(output, fourcc, frame_rate, frame_size, isColor=True)
+
+            count = 0
+            while(cap.isOpened()):
+                ret, frame = cap.read()
+                if ret==True:
+                    
+                    # Filename
+                    if count > (ndetections-2):
+                        count = 0
+                    #print(count)
+                    cv2.putText(frame, f'{name}',  
+                        (50, 150),  
+                        font, 3,  
+                        (255, 255, 255),  
+                        3,  
+                        cv2.LINE_4) 
+                    
+                    #for row in range(len(plotdata)-1):
+                        #print(row)
+                        #print(row+1)
+                    x1 = int(plotdata.iloc[count]["x"]+(.5*plotdata.iloc[count]["width"]))
+                    y1 = int(plotdata.iloc[count]["y"]+(.5*plotdata.iloc[count]["height"]))                   
+                    x2 = int(plotdata.iloc[(count+1)]["x"]+(.5*plotdata.iloc[(count+1)]["width"]))
+                    y2 = int(plotdata.iloc[(count+1)]["y"]+(.5*plotdata.iloc[(count+1)]["height"]))                   
+                    
+                    startpoint = (x1, y1)
+                    endpoint = (x2, y2)
+                    frame = cv2.circle(frame, (x1, y1), 100, (255, 255, 255), 1)
+                    #frame = cv2.line(frame, startpoint, endpoint, (255, 255, 255), 20)                   
+
+                    out.write(frame)
+                    count += 1
+                else:
+                    break
 
         # Release everything if job is finished
-        cap.release()
-        out.release()
-        cv2.destroyAllWindows()
+            cap.release()
+            out.release()
+            cv2.destroyAllWindows()
 
 
 
 
 # Read databases  
-#df_raw = df_from_db("inference/Inference_raw_nomergeV2.db", f'ledge == "FAR3"', f'strftime("%Y-%m-%d", time2) != "XYZ"', False)
-#df_stats = df_from_db("inference/Inference_stats_nomergeV2.db", f'nframes > 0', f'strftime("%Y-%m-%d", start) != "XYZ"', True)
-
-
-# Test
+df_raw = df_from_db("inference/Inference_raw_nomerge.db", f'ledge == "FAR3"', f'strftime("%Y-%m-%d", time2) != "XYZ"', False)
+df_stats = df_from_db("inference/Inference_stats_nomerge.db", f'nframes > 0', f'strftime("%Y-%m-%d", start) != "XYZ"', True)
 
 
 # Cut vid
@@ -93,13 +92,13 @@ def compress_annotate_vid(file, savepath):
 #    print(f'starting with {input.track}')
 #    vid = cut_vid(input, "../../../../../../Volumes/JHS-SSD2/full_vid/", "../../../../../../Volumes/JHS-SSD2/cut_vid/", "track") 
 #    print("cut finished")
-    
+
+
 # Compress and annotate
-#allfiles = list(Path("../../../../../../Volumes/JHS-SSD2/cut_vid/").glob("*.mp4"))
-#for file in allfiles[200:]:
-#    print(f'processing {file} ...')
-#    compress_annotate_vid(file, "../../../../../../Volumes/JHS-SSD2/annot_merge/")
-#    #print("compression and annotation finished")
+allfiles = list(Path("../../../../../../Volumes/JHS-SSD2/cut_vid/").glob("*.mp4"))
+for file in allfiles:
+    print(f'processing {file} ...')
+    compress_annotate_vid(file, "../../../../../../Volumes/JHS-SSD2/annot_merge/")
 
 
 #track = file.stem

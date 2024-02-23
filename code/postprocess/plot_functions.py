@@ -120,3 +120,110 @@ def plot_raw_by_time():
 
 
 
+
+
+def plot_orig_data(date, ledge):
+
+    con = create_connection("inference/Inference_raw_nomerge.db")
+    
+    cond1 = f'ledge = "{ledge}"'
+
+    sql = (f'SELECT * '
+           f'FROM Inference '
+           f'WHERE {cond1};')
+
+    dataset = pd.read_sql_query(
+        sql,
+        con)
+
+    dataset["time2"] = pd.to_datetime(dataset["time2"])
+    dataset["date"] = dataset["time2"].dt.date
+    dataset = dataset[dataset["date"] == date]
+    pred_raw = dataset.merge(inf[["track", "fish"]], on = "track", how = "left")
+
+    fish = pred_raw[pred_raw["fish"] == 1]
+    nofish = pred_raw[pred_raw["fish"] != 1]
+
+    trackids = list(fish["track"].unique())
+    fish = fish[fish["track"].isin(trackids[0:9])]
+
+    # Plot 1
+    fig, ax = plt.subplots()
+    ax.scatter(fish["x"], fish["y"], c = "r", alpha = .3, label = "Fish", s = 1)
+    #ax.scatter(nofish["x"], nofish["y"], c = "b", alpha = .3, label = "No Fish", s = 1)
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.invert_yaxis()
+    plt.legend()
+    plt.show()
+
+    # Plot 2
+    palette = sns.color_palette("bright")
+    sns.set(rc = {'axes.facecolor': 'white'})
+    ax = sns.lineplot(x= fish["x"], y=fish["y"], hue = fish["track"], palette = palette, sort = False)
+    ax.invert_yaxis()
+    plt.show()
+
+    return(dataset)
+
+
+
+
+def plot_results(data, x, y, logx, logy):
+
+    fish = data[data["fish"] == 1]
+    nofish = data[data["fish"] != 1]
+
+    if logx: 
+        x1 = np.log(fish[x])
+        x2 = np.log(nofish[x])
+    else: 
+        x1 = fish[x]
+        x2 = nofish[x]
+
+    if logy: 
+        y1 = np.log(fish[y])
+        y2 = np.log(nofish[y])
+    else: 
+        y1 = fish[y]
+        y2 = nofish[y]
+
+    fig, ax = plt.subplots()
+    ax.scatter(x1, y1, c = "r", alpha = .3, label = "Fish", s = 1)
+    ax.scatter(x2, y2, c = "b", alpha = .3, label = "No Fish", s = 1)
+    ax.set_xlabel(x)
+    ax.set_ylabel(y)
+    plt.legend()
+    plt.show()
+
+
+
+def plot_annotations(data, x, y, logx, logy):
+    
+    fish = data[data["Valid"] == 1]
+    nofish = data[data["Valid"] == 0]
+
+    if logx: 
+        x1 = np.log(fish[x])
+        x2 = np.log(nofish[x])
+    else: 
+        x1 = fish[x]
+        x2 = nofish[x]
+
+    if logy: 
+        y1 = np.log(fish[y])
+        y2 = np.log(nofish[y])
+    else: 
+        y1 = fish[y]
+        y2 = nofish[y]
+
+    fig, ax = plt.subplots()
+    ax.scatter(x1, y1, c = "r", alpha = .3, label = "Fish", s = 10)
+    ax.scatter(x2, y2, c = "b", alpha = .3, label = "No Fish", s = 10)
+    ax.set_xlabel(x)
+    ax.set_ylabel(y)
+    plt.legend()
+    plt.show()
+
+
+
