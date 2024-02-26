@@ -2,8 +2,8 @@
 
 import pandas as pd
 import matplotlib.pyplot as plt
-
-
+from functions import create_connection, df_from_db
+import numpy as np
 
 
 def plot_tracks(track_data, all_data):
@@ -122,31 +122,36 @@ def plot_raw_by_time():
 
 
 
-def plot_orig_data(date, ledge):
-
-    con = create_connection("inference/Inference_raw_nomerge.db")
+def plot_orig_data(db, preddata, date, ledge, fishlimit):
     
-    cond1 = f'ledge = "{ledge}"'
-
+    preddata = pd.read_csv(preddata, sep = ";", decimal = ",")
+    
+    con = create_connection(db)
+    cond1 = "ledge != 'SQL'"
+ 
     sql = (f'SELECT * '
-           f'FROM Inference '
-           f'WHERE {cond1};')
+        f'FROM Inference '
+        f'WHERE {cond1};')
 
     dataset = pd.read_sql_query(
-        sql,
-        con)
+    sql,
+    con, 
+    parse_dates = {"time2": "%Y-%m-%d %H:%M:%S.%f"})
 
-    dataset["time2"] = pd.to_datetime(dataset["time2"])
+
     dataset["date"] = dataset["time2"].dt.date
-    dataset = dataset[dataset["date"] == date]
-    pred_raw = dataset.merge(inf[["track", "fish"]], on = "track", how = "left")
+    
+    #dataset = dataset[dataset["date"] == date]
+    dataset = dataset[dataset["ledge"] == ledge]
+    print(dataset)
+    pred_raw = pd.merge(dataset, preddata[["track", "multi"]], on = "track", how = "right")
 
-    fish = pred_raw[pred_raw["fish"] == 1]
-    nofish = pred_raw[pred_raw["fish"] != 1]
+    fish = pred_raw[pred_raw["multi_y"] > fishlimit]
+    nofish = pred_raw[pred_raw["multi_y"] <= fishlimit]
 
     trackids = list(fish["track"].unique())
     fish = fish[fish["track"].isin(trackids[0:9])]
-
+    
     # Plot 1
     fig, ax = plt.subplots()
     ax.scatter(fish["x"], fish["y"], c = "r", alpha = .3, label = "Fish", s = 1)
@@ -158,9 +163,7 @@ def plot_orig_data(date, ledge):
     plt.show()
 
     # Plot 2
-    palette = sns.color_palette("bright")
-    sns.set(rc = {'axes.facecolor': 'white'})
-    ax = sns.lineplot(x= fish["x"], y=fish["y"], hue = fish["track"], palette = palette, sort = False)
+    ax.scatter(x= fish["x"], y=fish["y"], c = "r")
     ax.invert_yaxis()
     plt.show()
 
@@ -169,10 +172,14 @@ def plot_orig_data(date, ledge):
 
 
 
-def plot_results(data, x, y, logx, logy):
+def plot_results(db, inference, x, y, logx, logy, fishlimit):
 
-    fish = data[data["fish"] == 1]
-    nofish = data[data["fish"] != 1]
+    stats = df_from_db(db, "ledge != 'X'", "ledge != 'X'", True)
+    inference = pd.read_csv(inference, sep = ";", decimal = ",")
+    data = pd.merge(stats, inference, on = "track", how = "right")
+
+    fish = data[data["multi"] > fishlimit]
+    nofish = data[data["multi"] <= fishlimit]
 
     if logx: 
         x1 = np.log(fish[x])
@@ -195,6 +202,7 @@ def plot_results(data, x, y, logx, logy):
     ax.set_ylabel(y)
     plt.legend()
     plt.show()
+    return(fish)
 
 
 

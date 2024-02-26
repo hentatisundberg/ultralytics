@@ -20,7 +20,11 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import confusion_matrix
 from sklearn.svm import SVC
-from sklearn.metrics import accuracy_score
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import LinearSVC
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score
 from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 
 
@@ -442,7 +446,7 @@ def prep_training_data(tracks, valid):
     # Prepare Valid data and merge with track data
     valid = pd.read_csv(valid, sep = ";")
     valid = pd.merge(valid, tracks, on = "track", how = "left")
-    valid = valid[valid['Ledge'].isin(["FAR3", "FAR6", "TRI3", "TRI6"])]
+    valid = valid[valid['ledge'].isin(["FAR3", "FAR6", "TRI3", "TRI6"])]
     
     # Remove tracks with one detection and only include annotated tracks 
     valid = valid[valid["nframes"] > 1] 
@@ -451,11 +455,15 @@ def prep_training_data(tracks, valid):
     return(valid)
 
 
-def train_classifier(dataset):
+def train_classifier(dataset, merge):
 
-    # Read annotation data
-    #dataset = pd.read_csv(dataset, sep = ";", decimal = ",")
-    #dataset = dataset[~dataset["Valid"].isna()]
+    if merge: 
+        fold = "merged"
+    else: 
+        fold = "unmerged"
+
+    #dataset = pd.read_csv(dataset, sep = ";", decimal = ",")  
+    dataset = dataset[~dataset["Valid"].isna()]
 
     # Define response and target
     X_expl = dataset[["track", "start", "end"]]
@@ -476,34 +484,13 @@ def train_classifier(dataset):
     X_test = ss_test.fit_transform(X_test)
 
     # Train models
-
     models = {}
-
-    # Logistic Regression
-    from sklearn.linear_model import LogisticRegression
     models['Logistic Regression'] = LogisticRegression()
-
-    # Support Vector Machines
-    from sklearn.svm import LinearSVC
     models['Support Vector Machines'] = LinearSVC()
-
-    # Decision Trees
-    from sklearn.tree import DecisionTreeClassifier
     models['Decision Trees'] = DecisionTreeClassifier()
-
-    # Random Forest
-    from sklearn.ensemble import RandomForestClassifier
     models['Random Forest'] = RandomForestClassifier()
-
-    # Naive Bayes
-    from sklearn.naive_bayes import GaussianNB
     models['Naive Bayes'] = GaussianNB()
-
-    # K-Nearest Neighbors
-    from sklearn.neighbors import KNeighborsClassifier
     models['K-Nearest Neighbor'] = KNeighborsClassifier()
-
-    from sklearn.metrics import accuracy_score, precision_score, recall_score
 
     accuracy, precision, recall = {}, {}, {}
     df_out = pd.DataFrame()
@@ -531,31 +518,31 @@ def train_classifier(dataset):
     df_model['Recall'] = recall.values()
 
     print(df_model)
-    #print(df_out)
-    df_out.to_csv("inference/multimod_valid_nomerge.csv", sep = ";", decimal = ",")
+    df_out.to_csv("inference/multimod_valid_merge.csv", sep = ";", decimal = ",")
     
     # Save model
-    pickle.dump(models['Random Forest'], open("models/unmerged_tracks/RandomForests.sav", 'wb'))
-    pickle.dump(models['K-Nearest Neighbor'], open("models/unmerged_tracks/KNearest.sav", 'wb'))
-    pickle.dump(models['Naive Bayes'], open("models/unmerged_tracks/NaiveBayes.sav", 'wb'))
-    pickle.dump(models['Decision Trees'], open("models/unmerged_tracks/DecisionTrees.sav", 'wb'))
-    pickle.dump(models['Support Vector Machines'], open("models/unmerged_tracks/SVM.sav", 'wb'))
-    pickle.dump(models['Logistic Regression'], open("models/unmerged_tracks/LogisticRegression.sav", 'wb'))
+    pickle.dump(models['Random Forest'], open(f"models/{fold}_tracks/RandomForests.sav", 'wb'))
+    pickle.dump(models['K-Nearest Neighbor'], open(f"models/{fold}_tracks/KNearest.sav", 'wb'))
+    pickle.dump(models['Naive Bayes'], open(f"models/{fold}_tracks/NaiveBayes.sav", 'wb'))
+    pickle.dump(models['Decision Trees'], open(f"models/{fold}_tracks/DecisionTrees.sav", 'wb'))
+    pickle.dump(models['Support Vector Machines'], open(f"models/{fold}_tracks/SVM.sav", 'wb'))
+    pickle.dump(models['Logistic Regression'], open(f"models/{fold}_tracks/LogisticRegression.sav", 'wb'))
 
 
 
-
-
-
-
-def predict_from_classifier(dataset):
+def predict_from_classifier(dataset, merge):
     
-    RandFor = pickle.load(open("models/unmerged_tracks/RandomForests.sav", 'rb'))
-    KNear = pickle.load(open("models/unmerged_tracks/KNearest.sav", 'rb'))
-    NaiveBayes = pickle.load(open("models/unmerged_tracks/NaiveBayes.sav", 'rb'))
-    DecisionTree = pickle.load(open("models/unmerged_tracks/DecisionTrees.sav", 'rb'))
-    SVM = pickle.load(open("models/unmerged_tracks/SVM.sav", 'rb'))
-    LogReg = pickle.load(open("models/unmerged_tracks/LogisticRegression.sav", 'rb'))
+    if merge: 
+        fold = "merged"
+    else: 
+        fold = "unmerged"
+
+    RandFor = pickle.load(open(f"models/{fold}_tracks/RandomForests.sav", 'rb'))
+    KNear = pickle.load(open(f"models/{fold}_tracks/KNearest.sav", 'rb'))
+    NaiveBayes = pickle.load(open(f"models/{fold}_tracks/NaiveBayes.sav", 'rb'))
+    DecisionTree = pickle.load(open(f"models/{fold}_tracks/DecisionTrees.sav", 'rb'))
+    SVM = pickle.load(open(f"models/{fold}_tracks/SVM.sav", 'rb'))
+    LogReg = pickle.load(open(f"models/{fold}_tracks/LogisticRegression.sav", 'rb'))
 
     con = create_connection(dataset)
     cond1 = f'nframes > 1'
@@ -583,12 +570,11 @@ def predict_from_classifier(dataset):
 
     preds = pd.concat([dataset["track"], pred_randfor, pred_knear, pred_naive, pred_dectree, pred_svm, pred_logreg], axis = 1)
     preds["multi"] = preds["RandFor"]+preds["KNear"]+preds["NaBayes"]+preds["DecTree"]+preds["SVM"]+preds["LogReg"]
-    preds["nofish"] = np.where(preds["multi"] < 3, 1, 0)
 
     # Combine with original data
 #    out = pd.merge(preds, dataset, left_index = True, right_index = True)
     
-    preds.to_csv("inference/Unmerged_nofish.csv", sep = ";", decimal = ",")
+    preds.to_csv(f'inference/{fold}_fish.csv', sep = ";", decimal = ",")
     return(preds)
 
 

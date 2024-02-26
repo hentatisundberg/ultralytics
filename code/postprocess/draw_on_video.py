@@ -22,12 +22,14 @@ def compress_annotate_vid(file, savepath):
 
         plotdata = df_raw[df_raw["track"] == track][["track", "x", "y", "width", "height"]].reset_index()
         ndetections = len(plotdata)
-        print(f'number of detections is {ndetections}')
+        print(f'number of detections = {ndetections}')
 
-        if ndetections > 3:
+        if ndetections > 3 & ndetections < 1000:
         
             cap = cv2.VideoCapture(str(file))
+            nframes = cap.get(cv2.CAP_PROP_FRAME_COUNT)
 
+            print(f'number of frames = {nframes}')
             if not cap.isOpened():
                 print("Error: Could not open the input video file")
                 exit()
@@ -82,8 +84,8 @@ def compress_annotate_vid(file, savepath):
 
 
 # Read databases  
-df_raw = df_from_db("inference/Inference_raw_nomerge.db", f'ledge == "FAR3"', f'strftime("%Y-%m-%d", time2) != "XYZ"', False)
-df_stats = df_from_db("inference/Inference_stats_nomerge.db", f'nframes > 0', f'strftime("%Y-%m-%d", start) != "XYZ"', True)
+df_raw = df_from_db("inference/Inference_raw_merge.db", f'ledge == "FAR3"', f'strftime("%Y-%m-%d", time2) != "XYZ"', False)
+df_stats = df_from_db("inference/Inference_stats_merge.db", f'nframes > 0', f'strftime("%Y-%m-%d", start) != "XYZ"', True)
 
 
 # Cut vid
@@ -91,27 +93,13 @@ df_stats = df_from_db("inference/Inference_stats_nomerge.db", f'nframes > 0', f'
 #    input = df_stats.iloc[row]
 #    print(f'starting with {input.track}')
 #    vid = cut_vid(input, "../../../../../../Volumes/JHS-SSD2/full_vid/", "../../../../../../Volumes/JHS-SSD2/cut_vid/", "track") 
-#    print("cut finished")
+#    #print("cut finished")
 
 
-# Compress and annotate
+# Annotate and compress
 allfiles = list(Path("../../../../../../Volumes/JHS-SSD2/cut_vid/").glob("*.mp4"))
-for file in allfiles:
+for file in allfiles[360:]:
     print(f'processing {file} ...')
     compress_annotate_vid(file, "../../../../../../Volumes/JHS-SSD2/annot_merge/")
 
-
-#track = file.stem
-#pp = df_raw[df_raw["track"] == track][["track", "x", "y", "width", "height"]].reset_index()
-#pp.iloc[0]["x"]
-
-# Define input path
-#path = Path("../../../../../../Volumes/JHS-SSD2/clips_unmerged/clips_annot5/")
-#files = list(path.glob("*.avi"))
-
-##for file in files: 
-# #   print(f'processing file {file.name}')
-# #   if file.name[0] != ".":
-# #       compress_annotate_vid(file,
-# #           "../../../../../../Volumes/JHS-SSD2/clips_unmerged/clips_text/")
 
