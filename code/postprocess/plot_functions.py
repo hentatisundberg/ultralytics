@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from functions import create_connection, df_from_db
 import numpy as np
-
+import cv2
 
 def plot_tracks(track_data, all_data):
     all_data = pd.read_csv(all_data)
