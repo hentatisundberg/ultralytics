@@ -33,10 +33,10 @@ def cut_vid(row, vidpath, savepath):
 
     #print(ind)
     datefold = str(file["start"])[0:10]
-    ledge = file["Ledge"]
+    ledge = file["ledge"]
     yr = str(file["start"])[0:4]
 
-    starttime = str(file["file"][:-4]).split("_")[3].replace(".", ":")
+    starttime = file["start"].floor("h")
     startclip = file["start"]
     endclip = file["end"]
 
@@ -44,14 +44,13 @@ def cut_vid(row, vidpath, savepath):
         print("skip")
 
     else: 
-        starttimestamp = pd.to_datetime(datefold+" "+starttime)
-
-        startsec = (file["start"]-starttimestamp)/np.timedelta64(1,'s')
-        endsec = (file["end"]-starttimestamp)/np.timedelta64(1,'s')
+        startsec = (file["start"]-starttime)/np.timedelta64(1,'s')
+        endsec = (file["end"]-starttime)/np.timedelta64(1,'s')
 
         vid_rel_path = f"{vidpath}Video{yr}/{ledge}/{datefold}/"
-        #vid_rel_path = f"{vidpath}/{datefold}/"
-        full_path = vid_rel_path+file["file"]
+        print(vid_rel_path)
+        full_path = vid_rel_path+"Auklab1_FAR3_2022-06-20_04.00.00.mp4"    # OBS CHANGE !!!!
+        print(full_path)
 
         if os.path.isfile(full_path):
 
@@ -66,7 +65,7 @@ def cut_vid(row, vidpath, savepath):
             return(filename_out)
     
 
-def annotate_vid(vid, model, device):
+def annotate_vid(vid, model):
 
     # Pick out relevant video information
     results = model(vid, 
@@ -74,8 +73,7 @@ def annotate_vid(vid, model, device):
                     stream=True,  
                     save = True,
                     show = False, 
-                    save_frames = False, 
-                    device = device)
+                    save_frames = False)
     for result in results: 
         result.boxes
 
@@ -122,6 +120,7 @@ def cleanup(folder, vid):
 
 
 def df_from_db(db, scale, minframes, maxframes):
+    
     # Create connection
     con = create_connection(db)
 
@@ -142,22 +141,24 @@ def df_from_db(db, scale, minframes, maxframes):
     return(df)
 
 
-def main(ledge, minframes, maxframes, device):
+def main(ledge, minframes, maxframes):
 
-    df = df_from_db("inference/Inference_stats_nomerge.db", ledge, minframes, maxframes)
+    df = df_from_db("inference/Inference_stats_merge.db", ledge, minframes, maxframes)
+    dfx = df[df["track"] == "FAR3_2022-06-20_04-0011"]
+
     folder = "predict2"
 
     for row in df.index:
-        input = df.iloc[row]
-        print(f'starting with {input.file}')
-        vid = cut_vid(input, "../../../../../mnt/BSP_NAS2/Video/", "../../../../../mnt/BSP_NAS2_work/fish_model/t01/") 
+        input = dfx.iloc[row]
+        print(f'starting with {input.track}')
+        vid = cut_vid(input, "../../../../../mnt/BSP_NAS2/Video/", "../../../../../mnt/BSP_NAS2_work/fish_model/t1/") 
         print("cut finished")
-        annotate_vid(vid, YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt"), device)
+        annotate_vid(vid, YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt"))
         print("annotation finished")
         if os.path.isfile(f"runs/detect/{folder}/{Path(vid).stem}.avi"):
-            compress_vid(f"runs/detect/{folder}/{Path(vid).stem}.avi", "../../../../../../mnt/BSP_NAS2_work/fish_model/clips_annot5/")
+            compress_vid(f"runs/detect/{folder}/{Path(vid).stem}.avi", "../../../../../../mnt/BSP_NAS2_work/fish_model/t2/")
             print("compression finished")
-        cleanup(folder, vid)
+        #cleanup(folder, vid)
         print("cleanup finished")
 
 
@@ -166,5 +167,9 @@ def main(ledge, minframes, maxframes, device):
 
 # RUN 
 #main("FAR3", 2, 20, 0)
-main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+main(sys.argv[1], sys.argv[2], sys.argv[3])
 
+
+
+
+vid = cut_vid(dfx, "../../../../../mnt/BSP_NAS2/Video/", "../../../../../mnt/BSP_NAS2_work/fish_model/t1/") 
