@@ -1,6 +1,4 @@
-
 from ultralytics import YOLO
-
 
 # Load a model
 model = YOLO('../models/yolov8m.pt')  # load the best model thus far
