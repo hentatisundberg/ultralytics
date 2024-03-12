@@ -72,11 +72,9 @@ def create_connection(db_file):
     return conn
 
 
-
 def merge_tracks(input_data, size, chunksize, track_merge_thresh, time_scaling):
 
     dat = input_data
-    dat = dat[dat["multi"] > 0]
     ids = dat["track"].unique()
     ninp = len(ids)
     print(f'number of input tracks = {ninp}')
