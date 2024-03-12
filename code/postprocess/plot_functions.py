@@ -170,8 +170,6 @@ def plot_orig_data(db, preddata, date, ledge, fishlimit):
     return(dataset)
 
 
-
-
 def plot_results(db, inference, x, y, logx, logy, fishlimit):
 
     stats = df_from_db(db, "ledge != 'X'", "ledge != 'X'", True)

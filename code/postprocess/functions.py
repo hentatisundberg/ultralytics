@@ -33,6 +33,29 @@ from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 def euclidean(v1, v2):
     return sum((p-q)**2 for p, q in zip(v1, v2)) ** .5
 
+
+def movement(x, nframes):
+    ndata = len(x)
+    start = 0
+    if ndata < nframes:
+        end = ndata-2
+    else: 
+        end = nframes
+    point1 = (x.iloc[start][["x", "y"]]).tolist()
+    point2 = (x.iloc[end][["x", "y"]]).tolist()
+    eu = euclidean(point1, point2)
+    return(eu)
+
+
+def nth10(x):
+    if len(x) < 10:
+        return(x.iloc[-1])
+    else: 
+        return(x.iloc[9]) 
+  
+
+
+
 def create_connection(db_file):
     """ create a database connection to the SQLite database
         specified by db_file
@@ -185,7 +208,7 @@ def associate_points_before(detection_data, time_scaling_assign, track_assign_th
         
                 d1 = track_temp[["x", "y", "frame"]]
                 d2 = cand_bef[["x", "y", "frame"]]
-
+                
                 d1s = d1.iloc[0:10]
 
                 d1s["frame"] = d1s["frame"]*time_scaling_assign
@@ -206,16 +229,20 @@ def associate_points_before(detection_data, time_scaling_assign, track_assign_th
                 if nearest < track_assign_thresh:
                     minpos = cand_bef.loc[dist == nearest]
                     minpos["track_id"] = track
+                    #print("minpos is")
+                    #print(minpos)
                     track_temp = pd.concat([minpos, track_temp]) # Update track data
+                    #print("track temp is")
+                    #print(track_temp)
                     cand_bef.drop(minpos.index, inplace = True) # Delete from candidates
-                    #d1s = pd.concat([d1s, minpos[["x", "y", "frame"]]])
-                    track_temp = pd.concat([track_temp, minpos])
+                    #print(track_temp)
                     if len(cand_bef) == 0:
                         iterate = 0
                         #outdata = pd.concat([outdata, track_temp])
                     #print(f'Track {track} now includes {nrow} points')
                 else:
                     iterate = 0
+                
         outdata = pd.concat([outdata, track_temp])
     return outdata
 
@@ -350,8 +377,8 @@ def calc_stats2(input_data, trackname):
     dat["time2"] = pd.to_datetime(dat["time2"])
     stats = dat.groupby([trackname]).agg({"time2": ["min", "max"], 
                                             "frame": "count", 
-                                            "x": ["first", "std", "last"],
-                                            "y": ["first", "std", "last"], 
+                                            "x": ["first", "std", "last", nth10],
+                                            "y": ["first", "std", "last", nth10], 
                                             "conf": ["min", "mean", "max"], 
                                             "mindim": ["mean", "std"], 
                                             "maxdim": ["mean", "std"],
@@ -360,18 +387,29 @@ def calc_stats2(input_data, trackname):
     
     stats = stats.droplevel(1, axis = 1).reset_index()
     
-    cols = ["track", 'start','end', 'nframes', "x_first", "x_std", "x_last", "y_first", "y_std", "y_last", "conf_min", "conf_mean", "conf_max", "mindim_mean", "mindim_std", "maxdim_mean", "maxdim_std", "x_dist", "y_dist"]
+    cols = ["track", 'start','end', 'nframes', "x_first", "x_std", "x_last", "x_nth", "y_first", "y_std", "y_last", "y_nth", "conf_min", "conf_mean", "conf_max", "mindim_mean", "mindim_std", "maxdim_mean", "maxdim_std", "x_dist", "y_dist"]
     stats.columns = cols
     
     timeelapse = stats["end"]-stats["start"]
+    
     dur = []
+    
     for i in timeelapse:
         dur.append(i.total_seconds())    
     stats["dur_s"] = dur
     stats["detect_dens"] = stats["nframes"]/stats["dur_s"]
+    
+    # Initital movement 
+    init_movement = []
+    for row in stats.index:
+        p1 = stats[["x_first", "y_first"]].iloc[row].tolist()
+        p2 = stats[["x_nth", "y_nth"]].iloc[row].tolist()
+        init_movement.append(euclidean(p1, p2))
+    stats["init_move"] = init_movement
+        
+    # Ledge info
     stats["ledge"] = dat["ledge"].iloc[0]
-    #printstats = stats[["track", "start", "end", "nframes", "conf_mean", "x_dist", "y_dist", "dur_s"]]
-    #print(printstats.sort_values(by = ["conf_mean"], ascending = False))
+    
     return(stats)
 
 def modify_output(file):
