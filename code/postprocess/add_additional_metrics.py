@@ -20,27 +20,3 @@ for row in list(range(0, 10000)):
     # Append
     deg.append(val_out)
 
-
-rangex = range(0, 360)
-fig, ax = plt.subplots()
-ax.hist(deg, bins = rangex)
-plt.show()
-
-
-
-# Newtest
-
-p1 = [0, -1] # x coords
-p2 = [0, 1] # y coords
-
-np.degrees(np.arctan2(p1, p2))
-
-
-
-np.degrees(np.arctan2((p2[1]-p1[1])/(p2[0]-p1[0])))
-
-
-
-
-
-

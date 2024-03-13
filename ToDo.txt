@@ -1,5 +1,11 @@
-# Annotate some unmerged tracks from 2023 (I guess I need to draw on video)
-# Re-train classification model for enmerged tracks 
+
+
+# GENERAL PIPELINE
+# Pre-process raw tracks by adding unassigned points before
+# Train classification model on raw tracks 
+# Filter out those with very low confidence (about half)
+# Run merge_tracks
+# New classification on merged tracks (annotate, train model and run inference)
 
 
 

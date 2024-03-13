@@ -404,7 +404,19 @@ def calc_stats2(input_data, trackname):
         p2 = stats[["x_nth", "y_nth"]].iloc[row].tolist()
         init_movement.append(euclidean(p1, p2))
     stats["init_move"] = init_movement
-        
+
+    # Initital direction 
+    init_direction = []
+    for row in stats.index:
+        p1 = stats[["x_first", "x_nth"]].iloc[row].tolist()
+        p2 = stats[["y_first", "y_nth"]].iloc[row].tolist()
+        xs_adj = [(p1[0]/2592)-.5, (p1[1]/2592)-.5]
+        ys_adj = [(p2[0]/1520)-.5, (p2[1]/1520)-.5]
+        val = np.degrees(np.arctan2(xs_adj, ys_adj))[1]
+        val_out = np.where(val < 0, 360+val, val)
+        init_direction.append(val_out)
+    stats["init_dir"] = init_direction    
+
     # Ledge info
     stats["ledge"] = dat["ledge"].iloc[0]
     
