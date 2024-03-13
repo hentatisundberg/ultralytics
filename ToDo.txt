@@ -1,3 +1,9 @@
+# Annotate some unmerged tracks from 2023 (I guess I need to draw on video)
+# Re-train classification model for enmerged tracks 
+
+
+
+
 # Unmerged tracks: 
 
 ALL VARIABLES 

@@ -503,7 +503,7 @@ def train_classifier(dataset, merge):
 
     # Define response and target
     X_expl = dataset[["track", "start", "end"]]
-    X = dataset[["nframes",	"x_first","x_std","x_last","y_first","y_std","y_last", "conf_min","conf_mean","conf_max","mindim_mean","mindim_std","maxdim_mean","maxdim_std","x_dist","y_dist","dur_s", "detect_dens"]]
+    X = dataset[["nframes",	"x_first","x_std","x_last","x_nth", "y_first","y_std","y_last", "y_nth", "conf_min","conf_mean","conf_max","mindim_mean","mindim_std","maxdim_mean","maxdim_std","x_dist","y_dist","dur_s", "detect_dens", "init_move"]]
     y = dataset['Valid']
 
     # Define data sets 
@@ -553,8 +553,8 @@ def train_classifier(dataset, merge):
     df_model['Precision'] = precision.values()
     df_model['Recall'] = recall.values()
 
-    print(df_model)
-    df_out.to_csv("inference/multimod_valid_merge.csv", sep = ";", decimal = ",")
+    #print(df_model)
+    df_out.to_csv("inference/multimod_valid_nomerge.csv", sep = ";", decimal = ",")
     
     # Save model
     pickle.dump(models['Random Forest'], open(f"models/{fold}_tracks/RandomForests.sav", 'wb'))
@@ -590,7 +590,7 @@ def predict_from_classifier(dataset, merge):
         sql, 
         con)
     
-    preddata = dataset[["nframes","x_first","x_std","x_last","y_first","y_std","y_last", "conf_min","conf_mean","conf_max","mindim_mean","mindim_std","maxdim_mean","maxdim_std","x_dist","y_dist","dur_s", "detect_dens"]]
+    preddata = dataset[["nframes","x_first","x_std","x_last", "x_nth", "y_first","y_std","y_last", "y_nth", "conf_min","conf_mean","conf_max","mindim_mean","mindim_std","maxdim_mean","maxdim_std","x_dist","y_dist","dur_s", "detect_dens", "init_move"]]
 
     # Transform indata
     ss_pred = StandardScaler()
@@ -646,50 +646,73 @@ def modify_input(dat):
     return(dat)
 
 
-# Run functions
-def run_multiple(dir):
-    dir = Path(dir)
-    allfiles = list(dir.glob("*"))
-    nfiles = len(allfiles)
-    counter = 0
-    for file in allfiles:
-        orig_file = file
-        file_name = file.stem
-        print(file_name)
-        precheck = prep_data(orig_file)
-        if len(precheck["track_id"].unique()) > 1:
-            output1 = merge_tracks(precheck)
-            output2 = merge_tracks(output1)
-            output3 = merge_tracks(output2)
-            output4 = merge_tracks(output3)
-            output5 = merge_tracks(output4)
-            output6 = associate_points_before(output5, precheck)
-            output7 = associate_points_within(output6, precheck)
-            output8 = merge_tracks(output7)
-            ss = calc_stats(output8, precheck)
-            #insert_to_db(ss, "inference/Inference_stats.db")
-            output9 = modify_output(output8)
-            insert_to_db(output9, "inference/Inference_raw.db")
-            #output8.to_csv(f'inference/merged/{file_name}.csv')
-            print(f'Finished with file {counter} of {nfiles}')
-        counter += 1
 
+def compress_annotate_vid(file, savepath):
+    
+    name = file.name
+    
+    if name[0] != ".":
+        track = file.stem
+        output = savepath+name
 
-def run_single(file):
-    orig_file = Path(file)
-    print(orig_file)
-    precheck = prep_data(orig_file)
-    if len(precheck["track_id"].unique()) > 1:
-        output1 = merge_tracks(precheck)
-        #output2 = merge_tracks(output1)
-        #output3 = merge_tracks(output2)
-        #output4 = merge_tracks(output3)
-        #output5 = merge_tracks(output4)        
-        output6 = associate_points_before(precheck, precheck)
-        #output7 = associate_points_within(output6, precheck)
-        #output8 = merge_tracks(output7)
-        ss = calc_stats(output6, precheck)
-        ss.to_csv(f'inference/test/{orig_file.name}', sep = ";", decimal = ",")
-        plot_tracks(output6, orig_file)
-        return(output6)
+        plotdata = df_raw[df_raw["track"] == track][["track", "x", "y", "width", "height"]].reset_index()
+        ndetections = len(plotdata)
+        print(f'number of detections = {ndetections}')
+
+        if ndetections > 3 & ndetections < 1000:
+        
+            cap = cv2.VideoCapture(str(file))
+            nframes = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+
+            print(f'number of frames = {nframes}')
+            if not cap.isOpened():
+                print("Error: Could not open the input video file")
+                exit()
+            # XVID better than MJPG. DIVX = XVID
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Change this to your desired codec
+            frame_size = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+            frame_rate = int(cap.get(cv2.CAP_PROP_FPS))
+            font = cv2.FONT_HERSHEY_SIMPLEX 
+
+            out = cv2.VideoWriter(output, fourcc, frame_rate, frame_size, isColor=True)
+
+            count = 0
+            while(cap.isOpened()):
+                ret, frame = cap.read()
+                if ret==True:
+                    
+                    # Filename
+                    if count > (ndetections-2):
+                        count = 0
+                    #print(count)
+                    cv2.putText(frame, f'{name}',  
+                        (50, 150),  
+                        font, 3,  
+                        (255, 255, 255),  
+                        3,  
+                        cv2.LINE_4) 
+                    
+                    #for row in range(len(plotdata)-1):
+                        #print(row)
+                        #print(row+1)
+                    x1 = int(plotdata.iloc[count]["x"]+(.5*plotdata.iloc[count]["width"]))
+                    y1 = int(plotdata.iloc[count]["y"]+(.5*plotdata.iloc[count]["height"]))                   
+                    x2 = int(plotdata.iloc[(count+1)]["x"]+(.5*plotdata.iloc[(count+1)]["width"]))
+                    y2 = int(plotdata.iloc[(count+1)]["y"]+(.5*plotdata.iloc[(count+1)]["height"]))                   
+                    
+                    startpoint = (x1, y1)
+                    endpoint = (x2, y2)
+                    frame = cv2.circle(frame, (x1, y1), 100, (255, 255, 255), 1)
+                    #frame = cv2.line(frame, startpoint, endpoint, (255, 255, 255), 20)                   
+
+                    out.write(frame)
+                    count += 1
+                else:
+                    break
+
+        # Release everything if job is finished
+            cap.release()
+            out.release()
+            cv2.destroyAllWindows()
+
 
