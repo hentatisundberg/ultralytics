@@ -1,6 +1,8 @@
 
 
 import pandas as pd
+from datetime import datetime 
+import numpy as np
 from functions import merge_tracks, calc_stats2, insert_to_db, df_from_db
 
 
@@ -10,7 +12,7 @@ from functions import merge_tracks, calc_stats2, insert_to_db, df_from_db
 #pred = predict_from_classifier("inference/Inference_stats_nomerge.db") 
 
 
-dates = pd.date_range(start='6/15/2022', end='7/15/2023')
+dates = pd.date_range(start='6/15/2022', end='6/15/2022')
 
 for date in dates: 
     date = date.date()
@@ -29,6 +31,7 @@ for date in dates:
         v6 = v5[["track", "x", "y", "conf", "time2", "width", "height", "maxdim", "mindim", "xdiff", "ydiff","multi", "ledge", "filename"]]
 
         stats = calc_stats2(v5, "track")
+        print(stats)
         insert_to_db(v6, "inference/Inference_raw_mergeZ.db")
         insert_to_db(stats, "inference/Inference_stats_mergeZ.db")
 

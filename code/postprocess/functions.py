@@ -413,7 +413,7 @@ def calc_stats2(input_data, trackname):
         xs_adj = [(p1[0]/2592)-.5, (p1[1]/2592)-.5]
         ys_adj = [(p2[0]/1520)-.5, (p2[1]/1520)-.5]
         val = np.degrees(np.arctan2(xs_adj, ys_adj))[1]
-        val_out = np.where(val < 0, 360+val, val)
+        val_out = np.where(val < 0, 360+val, val).tolist()
         init_direction.append(val_out)
     stats["init_dir"] = init_direction    
 
