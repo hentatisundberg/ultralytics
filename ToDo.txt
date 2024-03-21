@@ -9,6 +9,12 @@
 
 
 
+# DATA TILL MICA
+# Alla tracks som kategorisrerats som arrival till relevant ledge 
+# Sailor-data per timme (echopype)
+
+
+
 
 # Unmerged tracks: 
 

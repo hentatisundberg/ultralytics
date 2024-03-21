@@ -19,5 +19,5 @@ for file in files:
         assigned = associate_points_before(df, 1, 200, 20)
         assigned2 = modify_input(assigned)
         stats = calc_stats2(assigned2, "track")
-        insert_to_db(assigned2, "inference/Inference_raw_nomergeZ.db")
-        insert_to_db(stats, "inference/Inference_stats_nomergeZ.db")
+        insert_to_db(assigned2, "inference/Inference_raw_nomerge.db")
+        insert_to_db(stats, "inference/Inference_stats_nomerge.db")

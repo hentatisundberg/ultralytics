@@ -12,7 +12,7 @@ from functions import merge_tracks, calc_stats2, insert_to_db, df_from_db
 #pred = predict_from_classifier("inference/Inference_stats_nomerge.db") 
 
 
-dates = pd.date_range(start='6/15/2022', end='6/15/2022')
+dates = pd.date_range(start='6/27/2022', end='7/03/2022')
 
 for date in dates: 
     date = date.date()

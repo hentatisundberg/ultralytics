@@ -1,5 +1,5 @@
 
-
+import cv2
 import pandas as pd
 import numpy as np
 import warnings
@@ -9,8 +9,6 @@ from pathlib import Path
 from itertools import combinations
 from itertools import product
 import sys
-import seaborn as sns
-import matplotlib.pyplot as plt
 import sqlite3
 from datetime import datetime 
 import pickle
@@ -29,6 +27,15 @@ from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 
 
 # Functions 
+
+def init_dir(x):
+    p1 = x[["x_first", "x_nth"]].tolist()
+    p2 = x[["y_first", "y_nth"]].tolist()
+    xs_adj = [(p1[0]/2592)-.5, (p1[1]/2592)-.5]
+    ys_adj = [(p2[0]/1520)-.5, (p2[1]/1520)-.5]
+    val = np.degrees(np.arctan2(xs_adj, ys_adj))[1]
+    val_out = np.where(val < 0, 360+val, val).tolist()
+    return val_out
 
 def euclidean(v1, v2):
     return sum((p-q)**2 for p, q in zip(v1, v2)) ** .5
@@ -53,8 +60,6 @@ def nth10(x):
     else: 
         return(x.iloc[9]) 
   
-
-
 
 def create_connection(db_file):
     """ create a database connection to the SQLite database
@@ -457,7 +462,7 @@ def prep_data(input):
     return output 
 
 def insert_to_db(input, output): 
-    input = input.reset_index()
+    #input = input.reset_index()
     #file = file[file["nframes"] > 5]
     con_local = create_connection(output)
     input.to_sql("Inference", con_local, if_exists='append')
@@ -515,7 +520,7 @@ def train_classifier(dataset, merge):
 
     # Define response and target
     X_expl = dataset[["track", "start", "end"]]
-    X = dataset[["nframes",	"x_first","x_std","x_last","x_nth", "y_first","y_std","y_last", "y_nth", "conf_min","conf_mean","conf_max","mindim_mean","mindim_std","maxdim_mean","maxdim_std","x_dist","y_dist","dur_s", "detect_dens", "init_move"]]
+    X = dataset[["nframes",	"x_first","x_std","x_last","x_nth", "y_first","y_std","y_last", "y_nth", "conf_min","conf_mean","conf_max","mindim_mean","mindim_std","maxdim_mean","maxdim_std","x_dist","y_dist","dur_s", "detect_dens", "init_move", "init_dir"]]
     y = dataset['Valid']
 
     # Define data sets 
@@ -566,7 +571,7 @@ def train_classifier(dataset, merge):
     df_model['Recall'] = recall.values()
 
     #print(df_model)
-    df_out.to_csv("inference/multimod_valid_nomerge.csv", sep = ";", decimal = ",")
+    df_out.to_csv(f"inference/multimod_valid_{fold}.csv", sep = ";", decimal = ",")
     
     # Save model
     pickle.dump(models['Random Forest'], open(f"models/{fold}_tracks/RandomForests.sav", 'wb'))
@@ -602,7 +607,7 @@ def predict_from_classifier(dataset, merge):
         sql, 
         con)
     
-    preddata = dataset[["nframes","x_first","x_std","x_last", "x_nth", "y_first","y_std","y_last", "y_nth", "conf_min","conf_mean","conf_max","mindim_mean","mindim_std","maxdim_mean","maxdim_std","x_dist","y_dist","dur_s", "detect_dens", "init_move"]]
+    preddata = dataset[["nframes","x_first","x_std","x_last", "x_nth", "y_first","y_std","y_last", "y_nth", "conf_min","conf_mean","conf_max","mindim_mean","mindim_std","maxdim_mean","maxdim_std","x_dist","y_dist","dur_s", "detect_dens", "init_move", "init_dir"]]
 
     # Transform indata
     ss_pred = StandardScaler()
@@ -659,7 +664,7 @@ def modify_input(dat):
 
 
 
-def compress_annotate_vid(file, savepath):
+def compress_annotate_vid_nodetect(inputdata, file, savepath):
     
     name = file.name
     
@@ -667,7 +672,7 @@ def compress_annotate_vid(file, savepath):
         track = file.stem
         output = savepath+name
 
-        plotdata = df_raw[df_raw["track"] == track][["track", "x", "y", "width", "height"]].reset_index()
+        plotdata = inputdata[inputdata["track"] == track][["track", "x", "y", "width", "height"]].reset_index()
         ndetections = len(plotdata)
         print(f'number of detections = {ndetections}')
 

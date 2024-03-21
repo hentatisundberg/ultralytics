@@ -8,13 +8,13 @@ import matplotlib.pyplot as plt
 import cv2
 
 # Prep training data 
-#valid = prep_training_data("inference/Inference_stats_nomergeZ.db", "data/fish_tracks_nomerge_annotationsX.csv")
+#valid = prep_training_data("inference/Inference_stats_merge.db", "data/fish_tracks_merge_annotations.csv")
 
 # Train model 
-#train_classifier(valid, False)
+#train_classifier(valid, True)
 
 # Predict 
-inf = predict_from_classifier("inference/Inference_stats_nomergeZ.db", False)
+inf = predict_from_classifier("inference/Inference_stats_merge.db", True)
 
 # Plot 
 #dataset = plot_orig_data("inference/Inference_raw_merge.db", "inference/merged_fish.csv", "2022-06-20", "FAR3", 1)
