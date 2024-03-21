@@ -340,7 +340,7 @@ def associate_points_within(track_data, all_data):
 
 
 
-def cut_vid(row, vidpath, savepath, trackname): 
+def cut_vid(row, vidpath, savepath): 
 
     datefold = str(row["start"])[0:10]
 
@@ -356,13 +356,14 @@ def cut_vid(row, vidpath, savepath, trackname):
         startsec = (row["start"]-starttime_vid)/np.timedelta64(1,'s')
         endsec = (row["end"]-starttime_vid)/np.timedelta64(1,'s')
 
-        ledge = row[trackname].split("_")[0]
-        vid_rel_path = f"{vidpath}{datefold}/"
-        full_path = f'{vid_rel_path}Auklab1_{ledge}_{starttime_name}.mp4'
+        ledge = row["track"].split("_")[0]
+        yrtext = row["start"].year 
+        vid_rel_path = f"{vidpath}Video{yrtext}/{ledge}/{datefold}"
+        full_path = f'{vid_rel_path}/Auklab1_{ledge}_{starttime_name}.mp4'
         print(full_path)
 
         if os.path.isfile(full_path):
-            tracknamex = row[trackname]
+            tracknamex = row["track"]
             filename_out = f"{savepath}{tracknamex}.mp4"
             ffmpeg_extract_subclip(
                 full_path,
@@ -479,13 +480,13 @@ def df_from_db(db, cond1, cond2, stats):
         df = pd.read_sql_query(
             sql,
             con, 
-            parse_dates = {"start": "%Y-%m-%d %H:%M:%S.%f", "end": "%Y-%m-%d %H:%M:%S.%f"}
+            parse_dates = {"start": "%Y-%m-%dT%H:%M:%S.%f", "end": "%Y-%m-%dT%H:%M:%S.%f"}
             )
     else: 
         df = pd.read_sql_query(
         sql,
         con, 
-        parse_dates = {"time2": "%Y-%m-%d %H:%M:%S.%f"}
+        parse_dates = {"time2": "%Y-%m-%dT%H:%M:%S.%f"}
         )
     return(df)
 
@@ -583,7 +584,7 @@ def train_classifier(dataset, merge):
 
 
 
-def predict_from_classifier(dataset, merge):
+def predict_from_classifier(dataset, merge, ledge):
     
     if merge: 
         fold = "merged"
@@ -627,7 +628,7 @@ def predict_from_classifier(dataset, merge):
     # Combine with original data
 #    out = pd.merge(preds, dataset, left_index = True, right_index = True)
     
-    preds.to_csv(f'inference/{fold}_fish.csv', sep = ";", decimal = ",")
+    preds.to_csv(f'inference/{fold}_fish{ledge}.csv', sep = ";", decimal = ",")
     return(preds)
 
 
@@ -717,8 +718,6 @@ def compress_annotate_vid_nodetect(inputdata, file, savepath):
                     x2 = int(plotdata.iloc[(count+1)]["x"]+(.5*plotdata.iloc[(count+1)]["width"]))
                     y2 = int(plotdata.iloc[(count+1)]["y"]+(.5*plotdata.iloc[(count+1)]["height"]))                   
                     
-                    startpoint = (x1, y1)
-                    endpoint = (x2, y2)
                     frame = cv2.circle(frame, (x1, y1), 100, (255, 255, 255), 1)
                     #frame = cv2.line(frame, startpoint, endpoint, (255, 255, 255), 20)                   
 
