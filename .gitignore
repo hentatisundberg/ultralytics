@@ -179,3 +179,5 @@ pnnx*
 data
 images/images.zip
 inference
+models/merged_tracks
+models/unmerged_tracks
