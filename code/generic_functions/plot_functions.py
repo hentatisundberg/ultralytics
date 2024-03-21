@@ -127,7 +127,7 @@ def plot_orig_data(db, preddata, date, ledge, fishlimit):
     preddata = pd.read_csv(preddata, sep = ";", decimal = ",")
     
     con = create_connection(db)
-    cond1 = "ledge != 'SQL'"
+    cond1 = f"ledge == '{ledge}'"
  
     sql = (f'SELECT * '
         f'FROM Inference '
@@ -143,7 +143,6 @@ def plot_orig_data(db, preddata, date, ledge, fishlimit):
     
     #dataset = dataset[dataset["date"] == date]
     dataset = dataset[dataset["ledge"] == ledge]
-    print(dataset)
     pred_raw = pd.merge(dataset, preddata[["track", "multi"]], on = "track", how = "right")
 
     fish = pred_raw[pred_raw["multi_y"] > fishlimit]
@@ -154,17 +153,14 @@ def plot_orig_data(db, preddata, date, ledge, fishlimit):
     
     # Plot 1
     fig, ax = plt.subplots()
-    ax.scatter(fish["x"], fish["y"], c = "r", alpha = .3, label = "Fish", s = 1)
+
+    ax.plot(fish["x"], fish["y"], c = "r", alpha = .5, label = "Fish")
     #ax.scatter(nofish["x"], nofish["y"], c = "b", alpha = .3, label = "No Fish", s = 1)
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.invert_yaxis()
+    plt.suptitle(f'{date}, fishlimit = {fishlimit}')
     plt.legend()
-    plt.show()
-
-    # Plot 2
-    ax.scatter(x= fish["x"], y=fish["y"], c = "r")
-    ax.invert_yaxis()
     plt.show()
 
     return(dataset)

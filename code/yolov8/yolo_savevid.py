@@ -8,67 +8,19 @@ from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 import sqlite3
 import numpy as np
 import sys
+sys.path.append("/Users/jonas/Documents/Programming/python/ultralytics/code/generic_functions/")
+from functions import cut_vid, create_connection, dr_from_db
 
 # Functions
 
-def create_connection(db_file):
-    """ create a database connection to the SQLite database
-        specified by db_file
-    :param db_file: database file
-    :return: Connection object or None
-    """
-    conn = None
-    try:
-        conn = sqlite3.connect(db_file)
-        return conn
-    except sqlite3.Error as e:
-        print(e)
 
-    return conn
+# Make one function of these two! 
 
 
-def cut_vid(row, vidpath, savepath): 
+def annotate_vid(vidpath, model):
 
-    file = row
-
-    #print(ind)
-    datefold = str(file["start"])[0:10]
-    ledge = file["ledge"]
-    yr = str(file["start"])[0:4]
-
-    starttime = file["start"].floor("h")
-    startclip = file["start"]
-    endclip = file["end"]
-
-    if any(pd.isnull([startclip, endclip, starttime])):
-        print("skip")
-
-    else: 
-        startsec = (file["start"]-starttime)/np.timedelta64(1,'s')
-        endsec = (file["end"]-starttime)/np.timedelta64(1,'s')
-
-        vid_rel_path = f"{vidpath}Video{yr}/{ledge}/{datefold}/"
-        print(vid_rel_path)
-        full_path = vid_rel_path+"Auklab1_FAR3_2022-06-20_04.00.00.mp4"    # OBS CHANGE !!!!
-        print(full_path)
-
-        if os.path.isfile(full_path):
-
-            filename_out = f"{savepath}{file['track']}.mp4"
-            ffmpeg_extract_subclip(
-                full_path,
-                startsec,
-                endsec,
-                targetname = filename_out
-            )
-            #print(filename_out)
-            return(filename_out)
-    
-
-def annotate_vid(vid, model):
-
-    # Pick out relevant video information
-    results = model(vid, 
+    # Pick out relevant video information and saves video and frames
+    results = model(vidpath, 
                     conf = 0.1,
                     stream=True,  
                     save = True,
@@ -77,14 +29,14 @@ def annotate_vid(vid, model):
     for result in results: 
         result.boxes
 
-def compress_vid(input, outputdir):
+def compress_vid(inputpath, outputdir):
 
-    file = Path(input)
+    file = Path(inputpath)
     name = file.name
     output = outputdir+name
     #print(output)
 
-    cap = cv2.VideoCapture(input)
+    cap = cv2.VideoCapture(file)
 
     if not cap.isOpened():
         print("Error: Could not open the input video file.")
@@ -100,10 +52,6 @@ def compress_vid(input, outputdir):
         ret, frame = cap.read()
         if ret==True:
             out.write(frame)
-
-            #cv2.imshow('frame',frame)
-            #if cv2.waitKey(1) & 0xFF == ord('q'):
-            #    break
         else:
             break
 
@@ -112,33 +60,14 @@ def compress_vid(input, outputdir):
     out.release()
     cv2.destroyAllWindows()
 
+
+
 def cleanup(folder, vid):
     #shutil.rmtree(f"runs/detect/{folder}/{Path(vid).stem}_frames") # Remove frames
     #os.remove(f"runs/detect/{folder}/{Path(vid).stem}.avi") # Remove video from Larus 
     shutil.rmtree(f"runs/detect/{folder}") # Remove folder
-    os.remove(f"../../../../../mnt/BSP_NAS2_work/fish_model/t01/{Path(vid).name}") # Remove video from Larus 
+    os.remove(f"../../../../../mnt/BSP_NAS2_work/fish_model/t01/{file}") # Remove video from Larus 
 
-
-def df_from_db(db, scale, minframes, maxframes):
-    
-    # Create connection
-    con = create_connection(db)
-
-    cond1 = f'Ledge == "{scale}"'
-    cond2 = f'nframes > {minframes}'
-    cond3 = f'nframes < {maxframes}'
-
-    sql = (f'SELECT * '
-           f'FROM Inference '
-           f'WHERE {cond1} AND {cond2} AND {cond3};')
-
-    df = pd.read_sql_query(
-        sql,
-        con, 
-        parse_dates = {"start": "%Y-%m-%d %H:%M:%S.%f", "end": "%Y-%m-%d %H:%M:%S.%f"}
-        )
-    
-    return(df)
 
 
 def main(ledge, minframes, maxframes):
