@@ -480,7 +480,7 @@ def df_from_db(db, cond1, cond2, stats):
         df = pd.read_sql_query(
         sql,
         con, 
-        parse_dates = {"time2": "%Y-%m-%d %H:%M:%S.%f"}
+        parse_dates = {"time2": "%Y-%m-%dT%H:%M:%S.%f"}
         )
     return(df)
 
