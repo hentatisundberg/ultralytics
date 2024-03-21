@@ -1,8 +1,8 @@
 
 
 # GENERAL PIPELINE
-# Pre-process raw tracks by adding unassigned points before
-# Train classification model on raw tracks 
+# preprocess_raw_tracks.py -- Pre-process raw tracks by adding unassigned points before
+# binary_classification.py -- Train classification model on raw tracks 
 # Filter out those with very low confidence (about half)
 # Run merge_tracks
 # New classification on merged tracks (annotate, train model and run inference)
