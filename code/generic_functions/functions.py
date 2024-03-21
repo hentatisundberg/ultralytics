@@ -339,8 +339,7 @@ def associate_points_within(track_data, all_data):
 
 
 
-
-def cut_vid(row, vidpath, savepath): 
+def cut_vid(row, vidpath, savepath, addseconds): 
 
     datefold = str(row["start"])[0:10]
 
@@ -353,8 +352,8 @@ def cut_vid(row, vidpath, savepath):
         print("skip")
 
     else: 
-        startsec = (row["start"]-starttime_vid)/np.timedelta64(1,'s')
-        endsec = (row["end"]-starttime_vid)/np.timedelta64(1,'s')
+        startsec = (row["start"]-starttime_vid)/np.timedelta64(1,'s')-addseconds
+        endsec = (row["end"]-starttime_vid)/np.timedelta64(1,'s')+addseconds
 
         ledge = row["track"].split("_")[0]
         yrtext = row["start"].year 

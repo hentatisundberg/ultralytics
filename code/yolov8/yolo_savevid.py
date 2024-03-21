@@ -84,36 +84,10 @@ def cleanup(folder, vid):
 
 
 
-def main(ledge, minframes, maxframes):
-
-    df = df_from_db("inference/Inference_stats_merge.db", ledge, minframes, maxframes)
-    dfx = df[df["track"] == "FAR3_2022-06-20_04-0011"]
-
-    folder = "predict2"
-
-    for row in df.index:
-        input = dfx.iloc[row]
-        print(f'starting with {input.track}')
-        vid = cut_vid(input, "../../../../../mnt/BSP_NAS2/Video/", "../../../../../mnt/BSP_NAS2_work/fish_model/t1/") 
-        print("cut finished")
-        annotate_vid(vid, YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt"))
-        print("annotation finished")
-        if os.path.isfile(f"runs/detect/{folder}/{Path(vid).stem}.avi"):
-            compress_vid(f"runs/detect/{folder}/{Path(vid).stem}.avi", "../../../../../../mnt/BSP_NAS2_work/fish_model/t2/")
-            print("compression finished")
-        #cleanup(folder, vid)
-        print("cleanup finished")
-
-
-
-
-# RUN 
-#main("FAR3", 2, 20, 0)
-#main(sys.argv[1], sys.argv[2], sys.argv[3])
-
-
-df = df_from_db("inference/Inference_stats_mergeTRI6.db", f'ledge == "TRI6"', f'ledge != "XXX"', True)
-valid = pd.read_csv("inference/merged_fishTRI6.csv", sep = ";", decimal = ",")
+# Run video annotation
+    
+df = df_from_db("inference/Inference_stats_mergeFAR3.db", f'ledge == "FAR3"', f'ledge != "XXX"', True)
+valid = pd.read_csv("inference/merged_fishFAR3.csv", sep = ";", decimal = ",")
 dfvalid = df.merge(valid, on = "track")
 dfvalid = dfvalid[dfvalid["multi"] > 0]
 
@@ -121,7 +95,7 @@ count = -1
 for row in range(0, len(dfvalid)): 
     count += 1
     dfx = dfvalid.iloc[count]
-    vid = cut_vid(dfx, "../../../../../mnt/BSP_NAS2/Video/", "../../../../../mnt/BSP_NAS2_work/fish_model/t1/") 
+    vid = cut_vid(dfx, "../../../../../mnt/BSP_NAS2/Video/", "../../../../../mnt/BSP_NAS2_work/fish_model/t1/", 2) 
     annotate_vid(vid, YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt"))
     #if os.path.isfile(f"runs/detect/{folder}/{Path(vid).stem}.avi"):
     folder = "predict2"
