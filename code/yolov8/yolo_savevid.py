@@ -91,14 +91,18 @@ valid = pd.read_csv("inference/merged_fishFAR3.csv", sep = ";", decimal = ",")
 dfvalid = df.merge(valid, on = "track")
 dfvalid = dfvalid[dfvalid["multi"] > 0]
 
-count = -1
+count = 5505
 for row in range(0, len(dfvalid)): 
     count += 1
+    print(count)
     dfx = dfvalid.iloc[count]
     vid = cut_vid(dfx, "../../../../../mnt/BSP_NAS2/Video/", "../../../../../mnt/BSP_NAS2_work/fish_model/t1/", 2) 
-    annotate_vid(vid, YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt"))
-    #if os.path.isfile(f"runs/detect/{folder}/{Path(vid).stem}.avi"):
-    folder = "predict2"
-    compress_vid(f"runs/detect/{folder}/{Path(vid).stem}.avi", "../../../../../../mnt/BSP_NAS2_work/fish_model/t2/", dfx)
-    #print("compression finished")
-    cleanup(folder, vid)
+    if os.path.isfile("../../../../../mnt/BSP_NAS2_work/fish_model/t1/"+dfx["track"]+".mp4"):
+        annotate_vid(vid, YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt"))
+        folder = "predict2"
+        compress_vid(f"runs/detect/{folder}/{Path(vid).stem}.avi", "../../../../../../mnt/BSP_NAS2_work/fish_model/t2/", dfx)
+        #print("compression finished")
+        print(count)
+        cleanup(folder, vid)
+        
+
