@@ -19,7 +19,7 @@ for date in dates:
     date = date.date()
     print(f'processing {date}')    
     orig_data = df_from_db("../../../../../../mnt/BSP_NAS2_work/fish_model/inference/Inference_raw_nomergeALL.db", 
-                           f'Ledge == "BONDEN6"', 
+                           f'Ledge == "ROST6"', 
                            f'strftime("%Y-%m-%d", time2) == "{date}"', 
                            False)
     
@@ -36,9 +36,8 @@ for date in dates:
         v6 = v5[["track", "x", "y", "conf", "time2", "width", "height", "maxdim", "mindim", "xdiff", "ydiff","multi", "ledge", "filename"]]
 
         stats = calc_stats2(v5, "track")
-        insert_to_db(v6, "inference/Inference_raw_mergeBONDEN6.db")
-        insert_to_db(stats, "inference/Inference_stats_mergeBONDEN6.db")
-
+        insert_to_db(v6, "../../../../../../mnt/BSP_NAS2_work/fish_model/inference/Inference_raw_mergeROST6.db")
+        insert_to_db(stats, "../../../../../../mnt/BSP_NAS2_work/fish_model/inference/Inference_stats_mergeROST6.db")
 
 
 
