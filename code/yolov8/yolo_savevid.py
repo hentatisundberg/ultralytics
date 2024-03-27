@@ -10,6 +10,7 @@ import numpy as np
 import sys
 sys.path.append("/Users/jonas/Documents/Programming/python/ultralytics/code/generic_functions/")
 sys.path.append("/home/jonas/Documents/vscode/ultralytics/code/generic_functions/")
+sys.path.append("/home/jonas/Documents/python/ultralytics-1/code/generic_functions/") # Larus
 
 from functions import cut_vid, create_connection, df_from_db
 
@@ -91,7 +92,7 @@ valid = pd.read_csv("inference/merged_fishFAR3.csv", sep = ";", decimal = ",")
 dfvalid = df.merge(valid, on = "track")
 dfvalid = dfvalid[dfvalid["multi"] > 0]
 
-count = 5505
+count = 9135
 for row in range(0, len(dfvalid)): 
     count += 1
     print(count)
@@ -100,7 +101,9 @@ for row in range(0, len(dfvalid)):
     if os.path.isfile("../../../../../mnt/BSP_NAS2_work/fish_model/t1/"+dfx["track"]+".mp4"):
         annotate_vid(vid, YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt"))
         folder = "predict2"
-        compress_vid(f"runs/detect/{folder}/{Path(vid).stem}.avi", "../../../../../../mnt/BSP_NAS2_work/fish_model/t2/", dfx)
+        foldpath = Path("runs/detect/"+folder)
+        if len(list(foldpath.glob("*"))) > 0:
+            compress_vid(f"runs/detect/{folder}/{Path(vid).stem}.avi", "../../../../../../mnt/BSP_NAS2_work/fish_model/t2/", dfx)
         #print("compression finished")
         print(count)
         cleanup(folder, vid)
