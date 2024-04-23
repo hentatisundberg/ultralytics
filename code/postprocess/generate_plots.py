@@ -4,8 +4,16 @@ import pandas as pd
 import cv2
 import random
 import numpy as np
-from plot_functions import plot_results, plot_orig_data
+import sys
+sys.path.append("/Users/jonas/Documents/Programming/python/ultralytics/code/generic_functions/") # Mac
+sys.path.append("/home/jonas/Documents/vscode/ultralytics/code/generic_functions/") # Sprattus
+sys.path.append("/home/jonas/Documents/python/ultralytics-1/code/generic_functions/") # Larus
 from functions import df_from_db
+from plot_functions import plot_results, plot_orig_data
+
+
+# Set path to inference data  
+wpath = "inference/"
 
 
 # Plot 
@@ -13,14 +21,18 @@ from functions import df_from_db
 
 
 # Stats
-plotdat = df_from_db("inference/Inference_stats_merge.db", 'ledge != "!"', 'ledge != "Y"', True)
-class_res = pd.read_csv("inference/merged_fish.csv", sep = ";", decimal = ",")
+plotdat = df_from_db(wpath + "Inference_stats_mergeFAR3.db", 'ledge != "!"', 'ledge != "Y"', True)
+class_res = pd.read_csv(wpath + "merged_fish.csv", sep = ";", decimal = ",")
 plotdat = plotdat.merge(class_res, on = "track")
 plotdat = plotdat[plotdat["multi"] > 0]
 
+# Save plotdat to Mica
+plotdat.to_csv("dump/FAR3StatsMerge_toMica.csv", sep = ";", decimal = ",")
+
+
 # Raw dat
 
-rawdat = df_from_db("inference/Inference_raw_merge.db", f'ledge != ""',  'ledge != "XXX"', False)
+rawdat = df_from_db(wpath + "Inference_raw_mergeFAR3.db", f'ledge != ""',  'ledge != "XXX"', False)
 #rawdat = df_from_db("inference/Inference_raw_merge.db", f'ledge == "{ledge}"',  f'strftime("%Y-%m-%d", time2) == "{date}"', False)
 rawdat = rawdat.merge(class_res, on = "track", how = "left")
 rawdat = rawdat[rawdat["multi_y"] > 0]
@@ -29,7 +41,7 @@ rawdat["H"] = rawdat["time2"].dt.strftime("%H").astype("int")
 rawdat["Yr"] = rawdat["time2"].dt.year
 
 
-rawraw = df_from_db("inference/Inference_raw_nomerge.db", f'ledge == "FAR3"',  'ledge != "XXX"', False)
+rawraw = df_from_db(wpath + "Inference_raw_nomergeALL.db", f'ledge == "FAR3"',  'ledge != "XXX"', False)
 rawraw["date"] = pd.to_datetime(rawraw['time2']).dt.date
 rawraw["H"] = rawraw["time2"].dt.strftime("%H").astype("int")
 rawraw["Yr"] = rawraw["time2"].dt.year
@@ -203,19 +215,6 @@ for track in all_tracks:
     time = data["time2"]
     ax.plot(time[0:30], -y[0:30], c = "black", alpha = .8, linewidth = 2)
     ax.annotate(data["track"].iloc[0], (time.iloc[0], -y.iloc[0]), fontsize = 8)
-
-plt.suptitle(f'2022-06-27')
-plt.show()
-
-
-# Plot2
-fig, ax = plt.subplots()
-x = 
-y = 
-ax.scatter(xs["start"], xs["init_move"], s = 10)
-
-for i, txt in enumerate(n):
-    ax.annotate(txt, (x[i], y[i]))
 
 plt.suptitle(f'2022-06-27')
 plt.show()
