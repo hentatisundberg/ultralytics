@@ -87,12 +87,12 @@ def cleanup(folder, vid):
 
 # Run video annotation
     
-df = df_from_db("inference/Inference_stats_mergeFAR3.db", f'ledge == "FAR3"', f'ledge != "XXX"', True)
-valid = pd.read_csv("inference/merged_fishFAR3.csv", sep = ";", decimal = ",")
+df = df_from_db("inference/Inference_stats_mergeFAR6.db", f'ledge == "FAR6"', f'ledge != "XXX"', True)
+valid = pd.read_csv("inference/merged_fishFAR6.csv", sep = ";", decimal = ",")
 dfvalid = df.merge(valid, on = "track")
 dfvalid = dfvalid[dfvalid["multi"] > 0]
 
-count = 9135
+count = -1
 for row in range(0, len(dfvalid)): 
     count += 1
     print(count)
