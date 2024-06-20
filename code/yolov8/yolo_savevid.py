@@ -61,10 +61,13 @@ def compress_vid(inputpath, outputdir, plotdata):
                  (50, 150), font, 3, (255, 255, 255),  
                     3,  
                     cv2.LINE_4)
-            startpoint = (int(dfx["x_first"]), int(dfx["y_first"]))
-            endpoint = (int(dfx["x_last"]), int(dfx["y_last"]))
-            cv2.circle(frame, (startpoint), 70, (255, 255, 255), 1)
-            cv2.circle(frame, (endpoint), 70, (255, 0, 255), 1)
+            if isinstance(dfx, int):
+                pass
+            else: 
+                startpoint = (int(dfx["x_first"]), int(dfx["y_first"]))
+                endpoint = (int(dfx["x_last"]), int(dfx["y_last"]))
+                cv2.circle(frame, (startpoint), 70, (255, 255, 255), 1)
+                cv2.circle(frame, (endpoint), 70, (255, 0, 255), 1)
             out.write(frame)
         else:
             break
@@ -78,10 +81,8 @@ def compress_vid(inputpath, outputdir, plotdata):
 
 
 def cleanup(folder, vid):
-    #shutil.rmtree(f"runs/detect/{folder}/{Path(vid).stem}_frames") # Remove frames
-    #os.remove(f"runs/detect/{folder}/{Path(vid).stem}.avi") # Remove video from Larus 
     shutil.rmtree(f"runs/detect/{folder}") # Remove folder
-    os.remove(f"../../../../../mnt/BSP_NAS2_work/fish_model/t1/{vid}") # Remove video from Larus 
+    #os.remove(f"../../../../../mnt/BSP_NAS2_work/fish_model/t1/{vid}") # Remove temp video from NAS2 
 
 
 
@@ -92,20 +93,32 @@ valid = pd.read_csv("inference/merged_fishFAR6.csv", sep = ";", decimal = ",")
 dfvalid = df.merge(valid, on = "track")
 dfvalid = dfvalid[dfvalid["multi"] > 0]
 
-count = -1
-for row in range(0, len(dfvalid)): 
-    count += 1
-    print(count)
-    dfx = dfvalid.iloc[count]
-    vid = cut_vid(dfx, "../../../../../mnt/BSP_NAS2/Video/", "../../../../../mnt/BSP_NAS2_work/fish_model/t1/", 2) 
-    if os.path.isfile("../../../../../mnt/BSP_NAS2_work/fish_model/t1/"+dfx["track"]+".mp4"):
-        annotate_vid(vid, YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt"))
-        folder = "predict2"
-        foldpath = Path("runs/detect/"+folder)
-        if len(list(foldpath.glob("*"))) > 0:
-            compress_vid(f"runs/detect/{folder}/{Path(vid).stem}.avi", "../../../../../../mnt/BSP_NAS2_work/fish_model/t2/", dfx)
-        #print("compression finished")
-        print(count)
-        cleanup(folder, vid)
+#count = -1
+#for row in range(0, len(dfvalid)): 
+#    count += 1
+#    print(count)
+#    dfx = dfvalid.iloc[count]
+#    vid = cut_vid(dfx, "../../../../../mnt/BSP_NAS2/Video/", "../../../../../mnt/BSP_NAS2_work/fish_model/t1/", 2) 
+##    if os.path.isfile("../../../../../mnt/BSP_NAS2_work/fish_model/t1/"+dfx["track"]+".mp4"):
+#        annotate_vid(vid, YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt"))
+#        folder = "predict2"
+#        foldpath = Path("runs/detect/"+folder)
+#        if len(list(foldpath.glob("*"))) > 0:
+#            compress_vid(f"runs/detect/{folder}/{Path(vid).stem}.avi", "../../../../../../mnt/BSP_NAS2_work/fish_model/t2/", dfx)
+#        #print("compression finished")
+##        print(count)
+ #       cleanup(folder, vid)
         
+
+# run on Greenland murre videos
+dfx = 0
+
+vidpath = Path("../../../../../mnt/BSP_NAS2/temp/eider_greenland/")
+for vid in list(vidpath.glob("*.ts")): 
+    annotate_vid(vid, YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57.pt"))
+    folder = "predict2"
+    foldpath = Path("runs/detect/"+folder)
+    if len(list(foldpath.glob("*"))) > 0:
+        compress_vid(f"runs/detect/{folder}/{Path(vid).stem}.avi", "../../../../../../mnt/BSP_NAS2_work/fish_model/t3/", dfx)
+    cleanup(folder, vid)
 

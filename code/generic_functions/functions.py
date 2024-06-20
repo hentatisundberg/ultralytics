@@ -2,8 +2,6 @@
 import cv2
 import pandas as pd
 import numpy as np
-import warnings
-warnings.filterwarnings('ignore')
 import os
 from pathlib import Path
 from itertools import combinations

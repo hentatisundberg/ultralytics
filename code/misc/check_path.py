@@ -7,7 +7,7 @@ import os
 
 #print(os.listdir("/Users/jonas/Documents/Programming/python/ultralytics/code/generic_functions/"))
 
-print(os.listdir("../../../../../../mnt/BSP_NAS2_work/fish_model/inference"))
+print(os.listdir("../../../../../../mnt/BSP_NAS2_work/fish_model"))
 
 
 

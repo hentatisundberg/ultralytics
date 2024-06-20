@@ -107,3 +107,7 @@ for it in its:
 
             out.to_csv(output_folder.joinpath(vid.stem+".csv"))
 
+
+
+# Run example 
+# python3 code/yolov8/yolo_inference_multiple.py 0 0
