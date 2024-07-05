@@ -11,15 +11,15 @@ from functions import merge_tracks, calc_stats2, insert_to_db, df_from_db
 
 
 # Dates 
-dates = pd.date_range(start='6/15/2022', end='7/15/2022')
-dates2 = pd.date_range(start='6/15/2023', end='7/15/2023')
+dates = pd.date_range(start='6/12/2022', end='7/20/2022')
+dates2 = pd.date_range(start='6/12/2023', end='7/23/2023')
 dates = pd.concat([pd.Series(dates), pd.Series(dates2)], axis = 0)
 
 for date in dates: 
     date = date.date()
     print(f'processing {date}')    
-    orig_data = df_from_db("../../../../../../mnt/BSP_NAS2_work/fish_model/inference/Inference_raw_nomergeALL.db", 
-                           f'Ledge == "ROST6"', 
+    orig_data = df_from_db("inference/Inference_raw_nomergeCOMPL.db", 
+                           f'Ledge == "TRI3"', 
                            f'strftime("%Y-%m-%d", time2) == "{date}"', 
                            False)
     
@@ -36,8 +36,8 @@ for date in dates:
         v6 = v5[["track", "x", "y", "conf", "time2", "width", "height", "maxdim", "mindim", "xdiff", "ydiff","multi", "ledge", "filename"]]
 
         stats = calc_stats2(v5, "track")
-        insert_to_db(v6, "../../../../../../mnt/BSP_NAS2_work/fish_model/inference/Inference_raw_mergeROST6.db")
-        insert_to_db(stats, "../../../../../../mnt/BSP_NAS2_work/fish_model/inference/Inference_stats_mergeROST6.db")
+        insert_to_db(v6, "../../../../../../mnt/BSP_NAS2_work/fish_model/databases/Inference_raw_mergeTRI_compl.db")
+        insert_to_db(stats, "../../../../../../mnt/BSP_NAS2_work/fish_model/databases/Inference_stats_mergeTRI3_compl.db")
 
 
 

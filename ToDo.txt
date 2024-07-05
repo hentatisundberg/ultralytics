@@ -2,15 +2,15 @@
 
 # GENERAL PIPELINE
 # preprocess_raw_tracks.py -- Pre-process raw tracks by adding unassigned points before
-# binary_classification.py -- Train classification model on raw tracks 
+# binary_classification.py -- Train (and run) classification model on raw tracks 
 # Filter out those with very low confidence (about half)
 # Run merge_tracks
 # New classification on merged tracks (annotate, train model and run inference)
-
+# Skapa filmer utifrån de filmer som kategoriserats som ej osannolikt varande fisk, script: yolo_savevid.py
 
 
 # DATA TILL MICA
-# Alla tracks som kategorisrerats som arrival till relevant ledge 
+# Alla tracks som kategoriserats som arrival till relevant ledge 
 # Sailor-data per timme (echopype)
 
 

@@ -23,7 +23,7 @@ its = range(startrow, 10000)
 for it in its: 
  
     # Load file with all planned files
-    filelist = pd.read_csv("../../../../../../mnt/BSP_NAS2_work/fish_model/inference_log.csv")
+    filelist = pd.read_csv("../../../../../../mnt/BSP_NAS2_work/fish_model/inference_log2.csv")
     vid_dir = Path(filelist.iloc[it]["paths"])
     vids = list(vid_dir.glob("*.mp4"))
 

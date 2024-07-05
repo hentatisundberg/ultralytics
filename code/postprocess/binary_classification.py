@@ -10,14 +10,15 @@ sys.path.append("/home/jonas/Documents/python/ultralytics-1/code/generic_functio
 from functions import create_connection, prep_training_data, train_classifier, predict_from_classifier, df_from_db
 
 # Prep training data 
-valid = prep_training_data("../../../../../../mnt/BSP_NAS2_work/fish_model/inference/Inference_stats_nomergeALL.db", 
-                           "data/fish_tracks_nomerge_annotations.csv")
+#valid = prep_training_data("../../../../../../mnt/BSP_NAS2_work/fish_model/inference/Inference_stats_nomergeALL.db", 
+#                           "data/fish_tracks_nomerge_annotations.csv")
 
 # Train model 
-train_classifier(valid, False)
+#train_classifier(valid, False)
 
 # Predict 
-inf = predict_from_classifier("../../../../../../mnt/BSP_NAS2_work/fish_model/inference/Inference_stats_nomergeALL.db", False, "ALL")
+inf = predict_from_classifier("../../../../../../mnt/BSP_NAS2_work/fish_model/databases/Inference_stats_mergeFAR3_compl.db", True, "FAR3compl")
+#inf = predict_from_classifier("inference/Inference_stats_nomergeCOMPL.db", False, "ALL")
 
 # Plot 
 #dataset = plot_orig_data("inference/Inference_raw_merge.db", "inference/merged_fish.csv", "2022-06-20", "FAR3", 1)
