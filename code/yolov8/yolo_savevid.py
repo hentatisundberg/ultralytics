@@ -97,7 +97,7 @@ print(df.head())
 print(valid.head())
 print(dfvalid.head())
 
-count = -1
+count = 46 # default = -1
 for row in range(0, len(dfvalid)): 
     count += 1
     print(count)
