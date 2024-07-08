@@ -97,7 +97,7 @@ print(df.head())
 print(valid.head())
 print(dfvalid.head())
 
-count = 46 # default = -1
+count = -1 # default = -1
 for row in range(0, len(dfvalid)): 
     count += 1
     print(count)
@@ -113,6 +113,11 @@ for row in range(0, len(dfvalid)):
         print(count)
         cleanup(folder, vid)
         
+
+# Save to Mica
+#dfvalid.to_csv("dump/TRI3complement.csv")
+
+
 
 #### Run on Greenland murre videos
 #dfx = 0
