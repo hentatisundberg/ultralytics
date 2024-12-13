@@ -35,35 +35,39 @@ def create_plain():
     for filename in files: 
 
         yaml_dict = None
-        yaml_dict = yaml.load(open(filename), Loader=yaml.FullLoader)
-
-        width = yaml_dict["size"]["width"]
-        height = yaml_dict["size"]["height"]
-
-        bounding_boxes = []
-        if "objects" in yaml_dict:
-                for obj in yaml_dict["objects"]:
-                    name = obj["name"]
-                    xmin = obj["bndbox"]["xmin"]
-                    ymin = obj["bndbox"]["ymin"]
-                    xmax = obj["bndbox"]["xmax"]
-                    ymax = obj["bndbox"]["ymax"]
-
-                    #assert xmin < xmax
-                    #assert ymin < ymax
-
-                    bounding_boxes.append([0, xmin, ymin, xmax, ymax])
+        print(filename)
         
-        labels_dst_path = Path(new_base+filename.stem+".txt")
+        try: 
+            yaml_dict = yaml.load(open(filename), Loader=yaml.FullLoader)
 
-        if len(bounding_boxes) > 0:
-            x = np.array(bounding_boxes)
-            plain_annotation = np.empty(x.shape)
-            plain_annotation[:, 0] = x[:, 0]
-            plain_annotation[:, 1::] = xyxy2xywhn(x[:, 1::], width, height)
-            np.savetxt(labels_dst_path, plain_annotation, fmt="%i %1.4f %1.4f %1.4f %1.4f")
-        else:   # If there are no bounding boxes in the file... 
-            open(labels_dst_path, "w")
+            width = yaml_dict["size"]["width"]
+            height = yaml_dict["size"]["height"]
+
+            bounding_boxes = []
+            if "objects" in yaml_dict:
+                    for obj in yaml_dict["objects"]:
+                        name = obj["name"]
+                        xmin = obj["bndbox"]["xmin"]
+                        ymin = obj["bndbox"]["ymin"]
+                        xmax = obj["bndbox"]["xmax"]
+                        ymax = obj["bndbox"]["ymax"]
+
+                        #assert xmin < xmax
+                        #assert ymin < ymax
+
+                        bounding_boxes.append([0, xmin, ymin, xmax, ymax])
+            
+            labels_dst_path = Path(new_base+filename.stem+".txt")
+
+            if len(bounding_boxes) > 0:
+                x = np.array(bounding_boxes)
+                plain_annotation = np.empty(x.shape)
+                plain_annotation[:, 0] = x[:, 0]
+                plain_annotation[:, 1::] = xyxy2xywhn(x[:, 1::], width, height)
+                np.savetxt(labels_dst_path, plain_annotation, fmt="%i %1.4f %1.4f %1.4f %1.4f")
+            else:   # If there are no bounding boxes in the file... 
+                open(labels_dst_path, "w")
+        except: pass
 
 
 def split_dataset():
@@ -79,10 +83,10 @@ def split_dataset():
 
     folds = ["train/", "validate/", "test/"]
     
-    #for fold in folds: 
-    #    os.mkdir(new_base+fold)
-    #    os.mkdir(new_base+fold+"images/")
-    #    os.mkdir(new_base+fold+"labels/")
+    for fold in folds: 
+        os.mkdir(new_base+fold)
+        os.mkdir(new_base+fold+"images/")
+        os.mkdir(new_base+fold+"labels/")
 
     for item in files: 
         label = item
@@ -109,6 +113,7 @@ results = split_dataset()
 
 
 #Run example
+#python3 code/dataset/prep_new_dataset.py "../../../../../../Volumes/JHS-SSD2/Eider_model/annotations/" "../../../../../../Volumes/JHS-SSD2/Eider_model/annotations/" "../../../../../../Volumes/JHS-SSD2/Eider_model/dataset_plain/"
 #python3 code/dataset/prep_new_dataset.py "../../../../../mnt/BSP_NAS2_work/seabirds/annotations/seabirds1" "../../../../../mnt/BSP_NAS2_work/seabirds/annotations/seabirds1" "../../../../../mnt/BSP_NAS2_work/seabirds/annotations/"
 
 

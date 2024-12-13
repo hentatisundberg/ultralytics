@@ -22,8 +22,9 @@ for file in list(Path(vid_outfold).glob("*")):
     save_all_frames()
 
 # Annotate
-results = annotate_images()
+#results = annotate_images()
 
 # Run example (Sprattus/Larus)
+#python3 code/dataset/auto_annotate.py "data/fishvids.csv" "../../../../../../../mnt/BSP_NAS2/Video/" "vids/" "images/" "data/annotations_yaml/" "../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train55.pt"
 #python3 code/dataset/auto_annotate.py "data/fishvids.csv" "../../../../../../../mnt/BSP_NAS2/Video/" "vids/" "images/" "data/annotations_yaml/" "../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train55.pt"
 
