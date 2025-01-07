@@ -336,6 +336,41 @@ def associate_points_within(track_data, all_data):
     return outdata
 
 
+# Minutes and seconds to seconds
+def minsec2sec(x):
+    return int(x.split(":")[0])*60+int(x.split(":")[1])
+
+
+
+def cut_vid_simpler(row, savepath, addseconds): 
+
+    video = Path(row["filename"])
+    startclip = row["start"]
+    endclip = row["end"]
+    
+    if any(pd.isnull([startclip, endclip, video])):
+        print("skip")
+
+    else: 
+        startsec = minsec2sec(startclip)-addseconds
+        endsec = minsec2sec(endclip)+addseconds
+        
+        if os.path.isfile(video):
+            filename_out = f"{savepath}{video.stem}_{startsec}_{endsec}.mp4"
+            ffmpeg_extract_subclip(
+                video,
+                startsec,
+                endsec,
+                filename_out
+            )
+            return(filename_out)
+
+
+#rx = {"filename": "../../../../Downloads/NVR_Hien_EJDER7_2023-05-07_19.00.00.mp4", "start": "00:00", "end": "01:00"}
+#row = pd.DataFrame(rx, index = [0])
+#cut_vid_simpler(row, "../../../../Downloads/", 0)
+
+
 
 def cut_vid(row, vidpath, savepath, addseconds): 
 
@@ -368,7 +403,6 @@ def cut_vid(row, vidpath, savepath, addseconds):
                 endsec,
                 targetname = filename_out
             )
-            #print(filename_out)
             return(filename_out)
 
 
@@ -728,4 +762,61 @@ def compress_annotate_vid_nodetect(inputdata, file, savepath):
             out.release()
             cv2.destroyAllWindows()
 
+
+
+# Read a video and save all frames as images
+def save_all_frames(video_path, image_folder):
+    try: 
+        vidname = Path(video_path).stem
+        cap = cv2.VideoCapture(video_path)
+        if not cap.isOpened():
+            print("Error: Could not open the input video file")
+            exit()
+        count = 0
+        while(cap.isOpened()):
+            ret, frame = cap.read()
+            if ret==True:
+                countnum = str(count).zfill(4)
+                cv2.imwrite(f'{image_folder}/{vidname}_{countnum}.png', frame)
+                count += 1
+            else:
+                break
+        cap.release()
+        cv2.destroyAllWindows()
+        print(f'number of frames = {count}')
+    except: 
+        print("Error: Could not open the input video file")
+        pass
+
+
+
+
+def euclidean_images(img1, img2):
+    
+    # Flatten the images
+    image1_flat = img1.flatten()
+    image2_flat = img2.flatten()
+    
+    # Compute the Euclidean distance
+    distance = np.linalg.norm(image1_flat - image2_flat)
+    return distance
+
+
+# Function for looking through images in a folder and remove those that are very similar to the previous one
+def remove_similar_images(folder, similarity_thresh):
+    files = list(Path(folder).glob("*.png"))
+    files.sort()
+    remove = []
+    for i in range(0, len(files)-1):
+        print(f'reading {files[i+1]}')
+        img1 = cv2.imread(files[i])
+        img2 = cv2.imread(files[i+1])
+        dist = euclidean_images(img1, img2)
+        print(f'distance to {files[i]} = {dist}')
+        if dist < similarity_thresh:
+            remove.append(files[i+1])
+            print(f'added {files[i+1]} to remove list')
+        else: 
+            pass
+    return remove
 

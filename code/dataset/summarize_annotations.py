@@ -32,8 +32,8 @@ def get_yaml_annotations():
                         ymin = obj["bndbox"]["ymin"]
                         xmax = obj["bndbox"]["xmax"]
                         ymax = obj["bndbox"]["ymax"]
-                        objx = xmin/width 
-                        objy = ymin/height
+                        objx = (xmin+xmax)/2/width 
+                        objy = (ymin+ymax)/2/height
                         objwidth = (xmax-xmin)/width
                         objheight = (ymax-ymin)/height
 
