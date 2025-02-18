@@ -20,30 +20,19 @@ model = YOLO("../../../../../../mnt/BSP_NAS2_work/fish_model/models/best_train57
 
 # Perform object detection 
 #vid_dir = pathlib.Path("../../../../../../mnt/BSP_NAS2_work/fish_model/tracking_videos/")
-
-vid_dir = pathlib.Path("../../../../../mnt/BSP_NAS2/Video/Video2022/FAR3/2022-07-05/")
-
-
-# If subfold:
-# subfolds = ["2022-07-05/", "2022-07-07/"]
-#vids = []
-#for i in subfolds:
-#    vids.append(list(vid_dir.joinpath(i).glob("*.mp4")))##
-
-#vids2 = []
-#for xs in vids:
-#    for x in xs:
-#        vids2.append(x)
-
-#vids = vids2
+#vid_dir = pathlib.Path("../../../../../mnt/BSP_NAS2/Video/Video2022/FAR3/2022-07-05/")
 
 
-# Else:
+# All videos in folder
 vids = list(vid_dir.glob("*.mp4"))
 
+# Specific files specified 
+vid_dir = Path("../../../../../mnt/BSP_NAS2/Video/Video2024/")
+allfiles = pd.read_csv("data/filenames.csv")
+filelist = vid_dir.joinpath(allfiles["path"])
 
 # SetUp output folder to save csv
-output_folder = 'inference/tracking/'+tracker_name+"_____"+datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
+output_folder = f'inference/tracking/fish___{tracker_name}___{datetime.datetime.now().strftime("%Y%m%dT%H%M%S")}'
 os.mkdir(output_folder)
 
 fps = 25
@@ -118,14 +107,5 @@ for vid in vids:
     shutil.copy2(tracker, output_folder)
     out.to_csv(f'{output_folder}/{filename}_{tracker_name}.csv')
 
-
-# Plot most recent track 
-#palette = sns.color_palette("bright")
-#sns.set(rc = {'axes.facecolor': 'white'})
-#ax = sns.scatterplot(x= out["x"], y=out["y"], hue = out["track_id"].astype("int"), palette = palette)
-#ax.invert_yaxis()
-#ax.grid(False)
-#plt.savefig("temp/"+datetime.datetime.now().strftime("%Y%m%dT%H%M%S"))
-#plt.close()
 
 
