@@ -4,25 +4,26 @@ import pandas as pd
 import numpy as np
 import os
 from pathlib import Path
-from itertools import combinations
-from itertools import product
-import sys
+#from itertools import combinations
+#from itertools import product
+#import sys
 import sqlite3
 from datetime import datetime 
 import pickle
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import confusion_matrix
-from sklearn.svm import SVC
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.svm import LinearSVC
-from sklearn.naive_bayes import GaussianNB
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import accuracy_score, precision_score, recall_score
+#from sklearn.model_selection import train_test_split
+#from sklearn.preprocessing import StandardScaler
+#from sklearn.linear_model import LogisticRegression
+#from sklearn.ensemble import RandomForestClassifier
+#from sklearn.metrics import confusion_matrix
+#from sklearn.svm import SVC
+#from sklearn.tree import DecisionTreeClassifier
+#from sklearn.svm import LinearSVC
+#from sklearn.naive_bayes import GaussianNB
+#from sklearn.neighbors import KNeighborsClassifier
+#from sklearn.metrics import accuracy_score, precision_score, recall_score
 from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
-
+from ultralytics import YOLO
+import yaml
 
 # Functions 
 
@@ -342,9 +343,17 @@ def minsec2sec(x):
 
 
 
-def cut_vid_simpler(row, savepath, addseconds): 
+def cut_vid_simpler(video_dir, row, savepath, addseconds): 
 
-    video = Path(row["filename"])
+    # Build path to video
+    video = row["filename"]
+    print(video)
+    video_station = video.split("_")[-3]
+    video_date = video.split("_")[-2]
+
+    full_path = f'{video_dir}{video_station}/{video_date}/{video}'
+    print(full_path)
+
     startclip = row["start"]
     endclip = row["end"]
     
@@ -354,16 +363,20 @@ def cut_vid_simpler(row, savepath, addseconds):
     else: 
         startsec = minsec2sec(startclip)-addseconds
         endsec = minsec2sec(endclip)+addseconds
-        
-        if os.path.isfile(video):
-            filename_out = f"{savepath}{video.stem}_{startsec}_{endsec}.mp4"
+        print(startsec)
+        print(endsec)
+
+        if os.path.isfile(full_path):
+            filename_out = f"{savepath}{Path(video).stem}_{startsec}_{endsec}.mp4"
             ffmpeg_extract_subclip(
-                video,
+                full_path,
                 startsec,
-                endsec,
+                endsec+startsec,
                 filename_out
             )
             return(filename_out)
+        else: 
+            print("file not found")
 
 
 #rx = {"filename": "../../../../Downloads/NVR_Hien_EJDER7_2023-05-07_19.00.00.mp4", "start": "00:00", "end": "01:00"}
@@ -819,4 +832,115 @@ def remove_similar_images(folder, similarity_thresh):
         else: 
             pass
     return remove
+
+
+
+
+
+def annotate_images(yolo_model, im_outfold, yaml_outfold):
+
+    # Load a pretrained YOLO model
+    model = YOLO(yolo_model)
+
+    # List of videos for inference 
+    ims = os.listdir(im_outfold)
+
+    # Run
+    for im in ims: 
+
+        if len(im) > 20:
+
+            results = model(f'{im_outfold}/{im}')
+
+            # Width and height
+            imread = cv2.imread(f'{im_outfold}/{im}')
+            width = imread.shape[1]
+            height = imread.shape[0]
+
+            # Process results list
+            boxes = []
+            boxesxyxy = []
+            classes = []
+            confs = []
+
+            for r in results:
+                boxes.append(r.boxes.xywh.tolist()) 
+                boxesxyxy.append(r.boxes.xyxy.tolist())
+                classes.append(r.boxes.cls.tolist())
+                confs.append(r.boxes.conf.tolist())
+
+            # Concatenate outputs
+            boxesx = sum(boxes, [])
+            boxesxyxy2 = sum(boxesxyxy, [])
+
+            # Save as data frames
+            nobj = len(boxesx)
+
+            filename = im.replace(".jpg", ".txt")
+            filename_simpl = im.replace(".png", "")
+
+            d = {"name": ['crow', 'eider_female', 'eider_male', 'gull', 'razorbill'], 
+                "class": [0, 1, 2, 3, 4]}
+            class_ids = pd.DataFrame(d)    
+
+            # .yaml
+            # Always in file
+            data_dict = {}
+            data_dict["image"] = filename
+            data_dict["size"] = {"depth": 3, "height": height, "width": width}
+            data_dict["source"] = {"framenumber": 0, "path": "na", "video": "na"}
+            data_dict["state"] = {"verified": False, "warnings": 0}
+
+
+            if nobj > 0:
+
+                data_dict["objects"] = []
+
+                for row in range(0, nobj):
+                    print(f'classes = {classes}')
+                    print(f'nobj = {nobj}')
+                    print(f'row = {row}')
+                    tdat = boxesxyxy2[row]
+                    #classdat = row #works
+                    classdat = classes[0][row]
+                    print(f'classdat = {classdat}')
+                    classname = class_ids[class_ids["class"] == classdat]["name"].item()
+                    print(f'classname = {classname}')
+                    #confdat = confs[row]
+                    
+                    data_dict["objects"].append(
+                        {
+                            "bndbox": {
+                                "xmax": tdat[2],
+                                "xmin": tdat[0],
+                                "ymax": tdat[3],
+                                "ymin": tdat[1],
+                            },
+                            "name": classname
+
+                        }
+                    )
+            
+            write_yaml_to_file(yaml_outfold, data_dict, filename_simpl)
+
+
+            # Plain annotation
+            #if nobj > 0:
+
+                #y = np.empty([nobj, 5], dtype = float)
+                #for row in range(0, nobj):
+                #    y[row, 1] = (boxesx[row][0]+(.5*boxesx[row][2]))/width # x 
+                #    y[row, 2] = (boxesx[row][1]+(.5*boxesx[row][3]))/height # y 
+                #    y[row, 3] = (boxesx[row][2])/width # w 
+                #    y[row, 4] = (boxesx[row][3])/height # h 
+                
+                #np.savetxt(f'../dataset/annotations/{filename}', y, fmt="%i %1.4f %1.4f %1.4f %1.4f")
+            
+            #else:
+             #   open(f'../dataset/annotations/{filename}', 'a').close()
+
+def write_yaml_to_file(yaml_outfold, py_obj,filename_simpl):
+    with open(f'{yaml_outfold}{filename_simpl}.yaml', 'w',) as f :
+        yaml.dump(py_obj,f,sort_keys=False) 
+
 

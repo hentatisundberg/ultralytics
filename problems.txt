@@ -1,39 +1,6 @@
-level_0                                43
-index                                  43
-track             FAR3_2022-07-02_08-0031
-start          2022-07-02 08:25:39.038532
-end            2022-07-02 08:25:39.678531
-nframes                                11
-x_first                       1951.837646
-x_std                          277.434183
-x_last                        1198.101562
-x_nth                         1208.239868
-y_first                               0.0
-y_std                             2.49963
-y_last                                0.0
-y_nth                                 0.0
-conf_min                         0.126443
-conf_mean                         0.44382
-conf_max                         0.710938
-mindim_mean                      96.84632
-mindim_std                      17.710005
-maxdim_mean                    166.000728
-maxdim_std                      38.469339
-x_dist                        1862.316711
-y_dist                         158.558912
-dur_s                            0.639999
-detect_dens                     17.187527
-init_move                      743.597778
-init_dir                       183.873936
-ledge                                FAR3
-Unnamed: 0                          10916
-RandFor                                 1
-KNear                                   0
-NaBayes                                 1
-DecTree                                 1
-SVM                                     0
-LogReg                                  0
-multi                                   3
-date                           2022-07-02
-H                                       8
-Yr                                   2022
+# Fix: 
+
+# save yaml and images on NAS
+# Loop video by video, mark those done
+# transfer yaml to plain annotations
+

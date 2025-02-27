@@ -1,6 +1,7 @@
 
 import pandas as pd
 from pathlib import Path
+import shutil
 
 base_dir = Path("../../../../../../mnt/BSP_NAS2_vol3/Video/Video2024/")
 inputfiles = pd.read_csv("data/filenames.csv")
@@ -13,6 +14,6 @@ for row in inputfiles.index:
     print (vid_dest)
     print (vid_origin)
     # Copy file from origin to destination
-    vid_origin.rename(vid_dest)
+    shutil.copy(str(vid_origin), str(vid_dest))
     
     
